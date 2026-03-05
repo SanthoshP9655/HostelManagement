@@ -16,8 +16,6 @@ class OutpassWardenPage extends ConsumerStatefulWidget {
 }
 
 class _OutpassWardenPageState extends ConsumerState<OutpassWardenPage> {
-  String? _filter;
-
   @override
   Widget build(BuildContext context) {
     final outpassAsync = ref.watch(outpassProvider);
@@ -34,7 +32,6 @@ class _OutpassWardenPageState extends ConsumerState<OutpassWardenPage> {
           PopupMenuButton<String?>(
             icon: const Icon(Icons.filter_list),
             onSelected: (v) {
-              setState(() => _filter = v);
               ref.read(outpassProvider.notifier).setStatusFilter(v);
             },
             itemBuilder: (_) => [
@@ -73,22 +70,23 @@ class _OutpassWardenPageState extends ConsumerState<OutpassWardenPage> {
                 child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                   Row(children: [
                     CircleAvatar(
-                      backgroundColor: AppTheme.wardenPrimary.withOpacity(0.15),
+                      backgroundColor: AppTheme.wardenPrimary.withValues(alpha: 0.15),
                       child: Text((student?['name'] ?? 'S')[0], style: const TextStyle(color: AppTheme.wardenPrimary, fontWeight: FontWeight.w700)),
                     ),
                     const SizedBox(width: 12),
                     Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                      Text(student?['name'] ?? 'Unknown', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppTheme.textPrimary)),
-                      Text(student?['register_number'] ?? '', style: const TextStyle(fontSize: 11, color: AppTheme.textSecondary)),
+                      Text(student?['name'] ?? 'Unknown', maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppTheme.textPrimary)),
+                      Text(student?['register_number'] ?? '', maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 11, color: AppTheme.textSecondary)),
                     ])),
+                    const SizedBox(width: 8),
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(color: _statusColor(status).withOpacity(0.15), borderRadius: BorderRadius.circular(6)),
+                      decoration: BoxDecoration(color: _statusColor(status).withValues(alpha: 0.15), borderRadius: BorderRadius.circular(6)),
                       child: Text(status, style: TextStyle(fontSize: 11, color: _statusColor(status), fontWeight: FontWeight.w600)),
                     ),
                   ]),
                   const SizedBox(height: 8),
-                  Text(o['reason'] ?? '', style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary)),
+                  Text(o['reason'] ?? '', maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary)),
                   const SizedBox(height: 6),
                   Text(DateFormatter.formatWithTime(DateTime.parse(o['created_at'])), style: const TextStyle(fontSize: 11, color: AppTheme.textSecondary)),
                   if (isPending) ...[

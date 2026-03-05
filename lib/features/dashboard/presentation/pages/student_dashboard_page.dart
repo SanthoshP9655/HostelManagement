@@ -156,13 +156,13 @@ class _StudentDashboardBodyState extends ConsumerState<_StudentDashboardBody> {
                   const SizedBox(height: 20),
                   const Text('My Overview', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.textPrimary)),
                   const SizedBox(height: 12),
-                  GridView.count(
-                    crossAxisCount: MediaQuery.of(context).size.width > 600 ? 4 : 2,
+                  GridView.extent(
+                    maxCrossAxisExtent: 190,
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
                     crossAxisSpacing: 12,
                     mainAxisSpacing: 12,
-                    childAspectRatio: 1.4,
+                    childAspectRatio: 1.5,
                     children: [
                       StatCard(
                         title: 'My Complaints',

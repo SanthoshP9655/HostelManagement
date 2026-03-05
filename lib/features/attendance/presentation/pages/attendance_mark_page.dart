@@ -61,10 +61,10 @@ class _AttendanceMarkPageState extends ConsumerState<AttendanceMarkPage> {
             icon: const Icon(Icons.refresh),
             onPressed: () => ref.invalidate(attendanceProvider),
           ),
-          TextButton.icon(
-            onPressed: _pickDate,
+          IconButton(
             icon: const Icon(Icons.calendar_today, size: 18),
-            label: Text(DateFormatter.format(_date), style: const TextStyle(fontSize: 13)),
+            tooltip: DateFormatter.format(_date),
+            onPressed: _pickDate,
           ),
         ],
       ),
@@ -76,13 +76,22 @@ class _AttendanceMarkPageState extends ConsumerState<AttendanceMarkPage> {
           return Column(
             children: [
               Padding(
-                padding: const EdgeInsets.all(16),
-                child: Row(children: [
-                  Expanded(child: Text('${students.length} students', style: const TextStyle(fontSize: 13, color: AppTheme.textSecondary))),
-                  TextButton(onPressed: () => setState(() => _draft = {for (var s in students) s['id']: 'Present'}), child: const Text('All Present')),
-                  const SizedBox(width: 8),
-                  TextButton(onPressed: () => setState(() => _draft = {for (var s in students) s['id']: 'Absent'}), child: const Text('All Absent', style: TextStyle(color: AppTheme.error))),
-                ]),
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                child: Wrap(
+                  alignment: WrapAlignment.spaceBetween,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  children: [
+                    Text('${students.length} students', style: const TextStyle(fontSize: 13, color: AppTheme.textSecondary)),
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        TextButton(onPressed: () => setState(() => _draft = {for (var s in students) s['id']: 'Present'}), child: const Text('All Present')),
+                        const SizedBox(width: 4),
+                        TextButton(onPressed: () => setState(() => _draft = {for (var s in students) s['id']: 'Absent'}), child: const Text('All Absent', style: TextStyle(color: AppTheme.error))),
+                      ],
+                    ),
+                  ],
+                ),
               ),
               Expanded(
                 child: ListView.builder(

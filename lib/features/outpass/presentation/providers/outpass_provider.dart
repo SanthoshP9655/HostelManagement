@@ -23,10 +23,13 @@ class OutpassNotifier extends AsyncNotifier<List<Map<String, dynamic>>> {
     var query = _db.outpasses.where('college_id', isEqualTo: session.collegeId);
 
     if (session.role == AppConstants.roleStudent) {
-      query = _db.outpasses.where('student_id', isEqualTo: session.id);
+      // Chain both filters — student sees ONLY their own outpasses within their college
+      query = query.where('student_id', isEqualTo: session.id);
     } else if (session.role == AppConstants.roleWarden && session.hostelId != null) {
+      // Warden sees only their hostel's outpasses
       query = query.where('hostel_id', isEqualTo: session.hostelId!);
     }
+    // Admin sees all outpasses for the college (no additional filter)
 
     final snap = await query.get();
     final List<Map<String, dynamic>> rows = [];

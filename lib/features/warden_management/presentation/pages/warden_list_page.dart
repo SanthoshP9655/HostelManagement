@@ -131,9 +131,16 @@ class WardenListPage extends ConsumerWidget {
                             ),
                             title: Text(
                               w['name'] as String,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                               style: const TextStyle(fontWeight: FontWeight.bold, color: AppTheme.textPrimary),
                             ),
-                            subtitle: Text('Code: ${w['warden_code']} | $hostelName', style: const TextStyle(color: AppTheme.textSecondary)),
+                            subtitle: Text(
+                              'Code: ${w['warden_code']} | $hostelName',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(color: AppTheme.textSecondary),
+                            ),
                             iconColor: AppTheme.textPrimary,
                             collapsedIconColor: AppTheme.textSecondary,
                             childrenPadding: const EdgeInsets.all(16).copyWith(top: 0),

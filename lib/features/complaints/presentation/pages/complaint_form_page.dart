@@ -52,6 +52,10 @@ class _ComplaintFormPageState extends ConsumerState<ComplaintFormPage> {
       if (_imageBytes != null && _imageName != null) {
         imageUrl = await ref.read(complaintListProvider.notifier)
             .uploadImage(_imageBytes!, '${DateTime.now().millisecondsSinceEpoch}_$_imageName');
+        if (mounted && imageUrl != null) {
+          AppSnackbar.success(context, 'Image successfully saved in Supabase!');
+          await Future.delayed(const Duration(seconds: 1));
+        }
       }
       await ref.read(complaintListProvider.notifier).createComplaint(
         title: _titleCtrl.text.trim(),

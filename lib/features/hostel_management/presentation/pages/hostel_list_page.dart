@@ -55,19 +55,19 @@ class HostelListPage extends ConsumerWidget {
                 decoration: BoxDecoration(
                   color: AppTheme.bgCard,
                   borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: AppTheme.adminPrimary.withOpacity(0.2), width: 1),
+                  border: Border.all(color: AppTheme.adminPrimary.withValues(alpha: 0.2), width: 1),
                 ),
                 child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                   Row(children: [
                     Container(
                       padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(color: AppTheme.adminPrimary.withOpacity(0.1), shape: BoxShape.circle),
+                      decoration: BoxDecoration(color: AppTheme.adminPrimary.withValues(alpha: 0.1), shape: BoxShape.circle),
                       child: const Icon(Icons.apartment, color: AppTheme.adminPrimary, size: 22),
                     ),
                     const SizedBox(width: 12),
                     Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                      Text(h['name'], style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.textPrimary)),
-                      Text('Block: ${h['block']}', style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary)),
+                      Text(h['name'], maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.textPrimary)),
+                      Text('Block: ${h['block']}', maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary)),
                     ])),
                     IconButton(
                       icon: const Icon(Icons.edit_outlined, size: 18),
@@ -80,8 +80,14 @@ class HostelListPage extends ConsumerWidget {
                     Row(children: [
                       const Icon(Icons.person_pin, size: 14, color: AppTheme.wardenPrimary),
                       const SizedBox(width: 6),
-                      Text('Warden: ${wardens.first['name']} (${wardens.first['warden_code']})',
-                          style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary)),
+                      Expanded(
+                        child: Text(
+                          'Warden: ${wardens.first['name']} (${wardens.first['warden_code']})',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary),
+                        ),
+                      ),
                     ]),
                   ],
                 ]),

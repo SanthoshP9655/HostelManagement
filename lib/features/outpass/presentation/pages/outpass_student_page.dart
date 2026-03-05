@@ -107,14 +107,15 @@ class _OutpassCard extends ConsumerWidget {
       decoration: BoxDecoration(
         color: AppTheme.bgCard,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: _color(status).withOpacity(0.3), width: 1.5),
+        border: Border.all(color: _color(status).withValues(alpha: 0.3), width: 1.5),
       ),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Row(children: [
+        Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Expanded(child: Text(outpass['reason'] ?? '', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppTheme.textPrimary), maxLines: 2, overflow: TextOverflow.ellipsis)),
+          const SizedBox(width: 8),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            decoration: BoxDecoration(color: _color(status).withOpacity(0.15), borderRadius: BorderRadius.circular(6)),
+            decoration: BoxDecoration(color: _color(status).withValues(alpha: 0.15), borderRadius: BorderRadius.circular(6)),
             child: Text(status, style: TextStyle(fontSize: 11, color: _color(status), fontWeight: FontWeight.w600)),
           ),
         ]),

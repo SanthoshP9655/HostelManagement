@@ -12,6 +12,7 @@ import '../../../student_management/presentation/pages/student_list_page.dart';
 import '../../../hostel_management/presentation/pages/hostel_list_page.dart';
 import '../../../complaints/presentation/pages/complaints_page.dart';
 import '../../../warden_management/presentation/pages/warden_list_page.dart';
+import '../../../outpass/presentation/pages/outpass_admin_page.dart';
 
 class AdminDashboardPage extends ConsumerStatefulWidget {
   const AdminDashboardPage({super.key});
@@ -34,6 +35,7 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
         WardenListPage(),
         HostelListPage(),
         ComplaintsPage(role: 'admin'),
+        OutpassAdminPage(),
       ],
     );
 
@@ -50,6 +52,7 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
           NavigationDestination(icon: Icon(Icons.person_outline), selectedIcon: Icon(Icons.person, color: AppTheme.adminPrimary), label: 'Wardens'),
           NavigationDestination(icon: Icon(Icons.apartment_outlined), selectedIcon: Icon(Icons.apartment, color: AppTheme.adminPrimary), label: 'Hostels'),
           NavigationDestination(icon: Icon(Icons.report_outlined), selectedIcon: Icon(Icons.report, color: AppTheme.adminPrimary), label: 'Complaints'),
+          NavigationDestination(icon: Icon(Icons.exit_to_app_outlined), selectedIcon: Icon(Icons.exit_to_app, color: AppTheme.adminPrimary), label: 'Outpass'),
         ],
       ),
     );
@@ -169,13 +172,13 @@ class _AdminDashboardBodyState extends ConsumerState<_AdminDashboardBody> {
   }
 
   Widget _buildStatGrid(BuildContext context) {
-    return GridView.count(
-      crossAxisCount: MediaQuery.of(context).size.width > 600 ? 4 : 2,
+    return GridView.extent(
+      maxCrossAxisExtent: 200,
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       crossAxisSpacing: 12,
       mainAxisSpacing: 12,
-      childAspectRatio: 1.4,
+      childAspectRatio: 1.5,
       children: [
         StatCard(title: 'Total Hostels', value: '${_stats['hostels'] ?? 0}', icon: Icons.apartment, color: AppTheme.adminPrimary),
         StatCard(title: 'Total Wardens', value: '${_stats['wardens'] ?? 0}', icon: Icons.person, color: AppTheme.info),
@@ -186,17 +189,14 @@ class _AdminDashboardBodyState extends ConsumerState<_AdminDashboardBody> {
   }
 
   Widget _buildComplaintSummary() {
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: Row(
-        children: [
-          SizedBox(width: 110, height: 120, child: StatCard(title: 'Pending', value: '${_stats['pending'] ?? 0}', icon: Icons.hourglass_empty, color: AppTheme.statusPending)),
-          const SizedBox(width: 12),
-          SizedBox(width: 110, height: 120, child: StatCard(title: 'In Progress', value: '${_stats['in_progress'] ?? 0}', icon: Icons.work_outline, color: AppTheme.statusInProgress)),
-          const SizedBox(width: 12),
-          SizedBox(width: 110, height: 120, child: StatCard(title: 'Resolved', value: '${_stats['resolved'] ?? 0}', icon: Icons.check_circle_outline, color: AppTheme.statusResolved)),
-        ],
-      ),
+    return Row(
+      children: [
+        Expanded(child: StatCard(title: 'Pending', value: '${_stats['pending'] ?? 0}', icon: Icons.hourglass_empty, color: AppTheme.statusPending)),
+        const SizedBox(width: 12),
+        Expanded(child: StatCard(title: 'In Progress', value: '${_stats['in_progress'] ?? 0}', icon: Icons.work_outline, color: AppTheme.statusInProgress)),
+        const SizedBox(width: 12),
+        Expanded(child: StatCard(title: 'Resolved', value: '${_stats['resolved'] ?? 0}', icon: Icons.check_circle_outline, color: AppTheme.statusResolved)),
+      ],
     );
   }
 

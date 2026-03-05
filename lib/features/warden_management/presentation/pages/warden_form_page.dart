@@ -92,11 +92,14 @@ class _WardenFormPageState extends ConsumerState<WardenFormPage> {
       ),
       body: _loading
           ? const LoadingWidget()
-          : SingleChildScrollView(
-              padding: const EdgeInsets.all(16),
-              child: Form(
-                key: _formKey,
-                child: Column(
+          : Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 600),
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(16),
+                  child: Form(
+                    key: _formKey,
+                    child: Column(
                   children: [
                     _buildField(
                       controller: _nameCtrl,
@@ -173,6 +176,8 @@ class _WardenFormPageState extends ConsumerState<WardenFormPage> {
                 ),
               ),
             ),
+          ),
+        ),
     );
   }
 

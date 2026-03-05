@@ -82,14 +82,11 @@ class _FilterButton extends ConsumerStatefulWidget {
 }
 
 class _FilterButtonState extends ConsumerState<_FilterButton> {
-  String? _status;
-
   @override
   Widget build(BuildContext context) {
     return PopupMenuButton<String?>(
       icon: const Icon(Icons.filter_list),
       onSelected: (v) {
-        setState(() => _status = v);
         ref.read(complaintListProvider.notifier).setFilter(status: v);
       },
       itemBuilder: (_) => [
@@ -126,6 +123,31 @@ class _ComplaintCard extends ConsumerWidget {
     }
   }
 
+  void _showImageDialog(BuildContext context, String imageUrl) {
+    showDialog(
+      context: context,
+      builder: (ctx) => Dialog(
+        backgroundColor: Colors.transparent,
+        insetPadding: const EdgeInsets.all(10),
+        child: Stack(
+          alignment: Alignment.topRight,
+          children: [
+            InteractiveViewer(
+              panEnabled: true,
+              minScale: 0.5,
+              maxScale: 4.0,
+              child: Image.network(imageUrl),
+            ),
+            IconButton(
+              icon: const Icon(Icons.close, color: Colors.white, size: 30),
+              onPressed: () => Navigator.pop(ctx),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final status = complaint['status'] as String;
@@ -144,12 +166,13 @@ class _ComplaintCard extends ConsumerWidget {
         decoration: BoxDecoration(
           color: AppTheme.bgCard,
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: _statusColor(status).withOpacity(0.3), width: 1.5),
+          border: Border.all(color: _statusColor(status).withValues(alpha: 0.3), width: 1.5),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Expanded(
                   child: Column(
@@ -157,6 +180,8 @@ class _ComplaintCard extends ConsumerWidget {
                     children: [
                       Text(
                         complaint['title'],
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
                         style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppTheme.textPrimary),
                       ),
                       if (complaint['students'] != null)
@@ -164,19 +189,26 @@ class _ComplaintCard extends ConsumerWidget {
                           padding: const EdgeInsets.only(top: 2),
                           child: Text(
                             'By: ${complaint['students']['name']}',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                             style: const TextStyle(fontSize: 11, color: AppTheme.adminPrimary, fontWeight: FontWeight.w500),
                           ),
                         ),
                     ],
                   ),
                 ),
+                const SizedBox(width: 8),
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
-                    color: _statusColor(status).withOpacity(0.15),
+                    color: _statusColor(status).withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(6),
                   ),
-                  child: Text(status, style: TextStyle(fontSize: 11, color: _statusColor(status), fontWeight: FontWeight.w600)),
+                  child: Text(
+                    status,
+                    maxLines: 1,
+                    style: TextStyle(fontSize: 11, color: _statusColor(status), fontWeight: FontWeight.w600),
+                  ),
                 ),
               ],
             ),
@@ -199,54 +231,99 @@ class _ComplaintCard extends ConsumerWidget {
                 ),
                 if (complaint['image_url'] != null && complaint['image_url'].toString().isNotEmpty) ...[
                   const SizedBox(width: 12),
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(10),
-                    child: Image.network(
-                      complaint['image_url'],
-                      width: 64,
-                      height: 64,
-                      fit: BoxFit.cover,
-                      loadingBuilder: (context, child, loadingProgress) {
-                        if (loadingProgress == null) return child;
-                        return Container(
-                          width: 64,
-                          height: 64,
-                          color: AppTheme.bgSurface,
-                          child: const Center(child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))),
-                        );
-                      },
-                      errorBuilder: (_, __, ___) => Container(
-                        width: 64,
-                        height: 64,
-                        color: AppTheme.bgSurface,
-                        child: const Icon(Icons.broken_image, size: 24, color: AppTheme.textSecondary),
-                      ),
+                  GestureDetector(
+                    onTap: () => _showImageDialog(context, complaint['image_url'] as String),
+                    child: Stack(
+                      children: [
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(10),
+                          child: Image.network(
+                            complaint['image_url'],
+                            width: 64,
+                            height: 64,
+                            fit: BoxFit.cover,
+                            loadingBuilder: (context, child, loadingProgress) {
+                              if (loadingProgress == null) return child;
+                              return Container(
+                                width: 64,
+                                height: 64,
+                                color: AppTheme.bgSurface,
+                                child: const Center(child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))),
+                              );
+                            },
+                            errorBuilder: (_, __, ___) => Container(
+                              width: 64,
+                              height: 64,
+                              color: AppTheme.bgSurface,
+                              child: const Icon(Icons.broken_image, size: 24, color: AppTheme.textSecondary),
+                            ),
+                          ),
+                        ),
+                        Positioned(
+                          bottom: 0,
+                          right: 0,
+                          child: Container(
+                            padding: const EdgeInsets.all(3),
+                            decoration: BoxDecoration(
+                              color: Colors.black54,
+                              borderRadius: BorderRadius.circular(5),
+                            ),
+                            child: const Icon(Icons.zoom_in, size: 12, color: Colors.white),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ] else ...[
+                  const SizedBox(width: 12),
+                  Container(
+                    width: 64,
+                    height: 64,
+                    decoration: BoxDecoration(
+                      color: AppTheme.bgSurface.withValues(alpha: 0.5),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: AppTheme.divider, width: 1),
+                    ),
+                    child: const Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.image_not_supported_outlined, size: 20, color: AppTheme.textSecondary),
+                        SizedBox(height: 4),
+                        Text(
+                          'No image\nincluded',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(fontSize: 8, color: AppTheme.textSecondary, fontWeight: FontWeight.w500),
+                        ),
+                      ],
                     ),
                   ),
                 ],
               ],
             ),
-            Row(children: [
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
-                decoration: BoxDecoration(
-                  color: _priorityColor(priority).withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(4),
+            Wrap(
+              spacing: 8,
+              runSpacing: 4,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: _priorityColor(priority).withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Text(priority, style: TextStyle(fontSize: 10, color: _priorityColor(priority), fontWeight: FontWeight.w600)),
                 ),
-                child: Text(priority, style: TextStyle(fontSize: 10, color: _priorityColor(priority), fontWeight: FontWeight.w600)),
-              ),
-              const SizedBox(width: 8),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
-                decoration: BoxDecoration(color: AppTheme.bgSurface, borderRadius: BorderRadius.circular(4)),
-                child: Text(complaint['category'] ?? '', style: const TextStyle(fontSize: 10, color: AppTheme.textSecondary)),
-              ),
-              const Spacer(),
-              Text(
-                DateFormatter.timeAgo(DateTime.parse(complaint['created_at'])),
-                style: const TextStyle(fontSize: 11, color: AppTheme.textSecondary),
-              ),
-            ]),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                  decoration: BoxDecoration(color: AppTheme.bgSurface, borderRadius: BorderRadius.circular(4)),
+                  child: Text(complaint['category'] ?? '', style: const TextStyle(fontSize: 10, color: AppTheme.textSecondary)),
+                ),
+                Text(
+                  DateFormatter.timeAgo(DateTime.parse(complaint['created_at'])),
+                  style: const TextStyle(fontSize: 11, color: AppTheme.textSecondary),
+                ),
+              ],
+            ),
           ],
         ),
       ),

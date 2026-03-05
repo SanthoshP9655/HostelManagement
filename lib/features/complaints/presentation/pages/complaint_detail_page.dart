@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/constants/app_theme.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/utils/date_formatter.dart';
+import '../../../../core/services/firestore_service.dart';
 import '../../../../shared/widgets/loading_widget.dart';
 import '../../../../shared/widgets/app_snackbar.dart';
 import '../providers/complaint_provider.dart';
@@ -31,7 +32,31 @@ class _ComplaintDetailPageState extends ConsumerState<ComplaintDetailPage> {
   Future<void> _load() async {
     final db = ref.read(complaintListProvider.notifier);
     final complaints = ref.read(complaintListProvider).valueOrNull ?? [];
-    _complaint = complaints.firstWhere((c) => c['id'] == widget.complaintId, orElse: () => {});
+    final cached = complaints.where((c) => c['id'] == widget.complaintId).toList();
+
+    if (cached.isNotEmpty) {
+      _complaint = cached.first;
+    } else {
+      // Fallback: fetch directly from Firestore so image_url is always present
+      final snap = await FirestoreService.instance.complaints.doc(widget.complaintId).get();
+      if (snap.exists) {
+        final c = snap.data()!;
+        c['id'] = snap.id;
+        // Enrich with student info
+        final studentId = c['student_id'];
+        if (studentId != null) {
+          final sSnap = await FirestoreService.instance.students.doc(studentId).get();
+          if (sSnap.exists) {
+            final s = sSnap.data()!;
+            c['students'] = {'id': sSnap.id, 'name': s['name'], 'register_number': s['register_number']};
+          }
+        }
+        _complaint = c;
+      } else {
+        _complaint = {};
+      }
+    }
+
     _history = await db.getHistory(widget.complaintId);
     setState(() => _loading = false);
   }
@@ -167,6 +192,26 @@ class _ComplaintDetailPageState extends ConsumerState<ComplaintDetailPage> {
                   ),
                 ),
               ),
+            ] else ...[
+              const SizedBox(height: 16),
+              const Text('Attached Evidence', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: AppTheme.textPrimary)),
+              const SizedBox(height: 12),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(vertical: 32),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(12),
+                  color: AppTheme.bgSurface.withValues(alpha: 0.5),
+                  border: Border.all(color: AppTheme.divider, width: 1),
+                ),
+                child: const Column(
+                  children: [
+                    Icon(Icons.image_not_supported_outlined, size: 32, color: AppTheme.textSecondary),
+                    SizedBox(height: 8),
+                    Text('No image included', style: TextStyle(color: AppTheme.textSecondary, fontSize: 13, fontWeight: FontWeight.w500)),
+                  ],
+                ),
+              ),
             ],
             if (canChangeStatus) ...[
               const SizedBox(height: 24),
@@ -178,7 +223,7 @@ class _ComplaintDetailPageState extends ConsumerState<ComplaintDetailPage> {
                   final isCurrent = _complaint?['status'] == s;
                   return ActionChip(
                     label: Text(s),
-                    backgroundColor: isCurrent ? AppTheme.adminPrimary.withOpacity(0.2) : AppTheme.bgSurface,
+                    backgroundColor: isCurrent ? AppTheme.adminPrimary.withValues(alpha: 0.2) : AppTheme.bgSurface,
                     labelStyle: TextStyle(color: isCurrent ? AppTheme.adminPrimary : AppTheme.textSecondary, fontSize: 12),
                     onPressed: isCurrent ? null : () => _changeStatus(s),
                   );
@@ -252,7 +297,7 @@ class _Badge extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Container(
     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-    decoration: BoxDecoration(color: color.withOpacity(0.15), borderRadius: BorderRadius.circular(6)),
+    decoration: BoxDecoration(color: color.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(6)),
     child: Text(text, style: TextStyle(fontSize: 11, color: color, fontWeight: FontWeight.w600)),
   );
 }

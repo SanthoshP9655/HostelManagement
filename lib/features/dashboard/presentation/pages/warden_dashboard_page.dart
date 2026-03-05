@@ -169,13 +169,13 @@ class _WardenDashboardBodyState extends ConsumerState<_WardenDashboardBody> {
                   const SizedBox(height: 20),
                   const Text("Today's Overview", style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.textPrimary)),
                   const SizedBox(height: 12),
-                  GridView.count(
-                    crossAxisCount: MediaQuery.of(context).size.width > 600 ? 3 : 2,
+                  GridView.extent(
+                    maxCrossAxisExtent: 180,
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
                     crossAxisSpacing: 12,
                     mainAxisSpacing: 12,
-                    childAspectRatio: 1.4,
+                    childAspectRatio: 1.5,
                     children: [
                       StatCard(title: 'Total Students', value: '${_stats['students'] ?? 0}', icon: Icons.school, color: AppTheme.wardenPrimary),
                       StatCard(title: 'Present Today', value: '${_stats['present_today'] ?? 0}', icon: Icons.check_circle_outline, color: AppTheme.success),

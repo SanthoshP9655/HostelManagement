@@ -14,85 +14,91 @@ class RoleSelectorPage extends StatelessWidget {
     return Scaffold(
       backgroundColor: AppTheme.bgDark,
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SizedBox(height: 32),
-              Row(
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 480),
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Container(
-                    width: 48,
-                    height: 48,
-                    decoration: BoxDecoration(
-                      gradient: const LinearGradient(
-                        colors: [AppTheme.adminPrimary, AppTheme.adminSecondary],
+                  const SizedBox(height: 32),
+                  Row(
+                    children: [
+                      Container(
+                        width: 48,
+                        height: 48,
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(
+                            colors: [AppTheme.adminPrimary, AppTheme.adminSecondary],
+                          ),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const Icon(Icons.home_work, color: Colors.white, size: 26),
                       ),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: const Icon(Icons.home_work, color: Colors.white, size: 26),
+                      const SizedBox(width: 12),
+                      const Text(
+                        'SmartHostel',
+                        style: TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.w700,
+                          color: AppTheme.textPrimary,
+                        ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(width: 12),
+                  const SizedBox(height: 12),
                   const Text(
-                    'SmartHostel',
+                    'Who are you?',
                     style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.w700,
+                      fontSize: 32,
+                      fontWeight: FontWeight.w800,
                       color: AppTheme.textPrimary,
                     ),
                   ),
+                  const SizedBox(height: 8),
+                  const Text(
+                    'Select your role to continue',
+                    style: TextStyle(fontSize: 15, color: AppTheme.textSecondary),
+                  ),
+                  const SizedBox(height: 40),
+                  _RoleCard(
+                    icon: Icons.admin_panel_settings,
+                    label: 'College Admin',
+                    description: 'Manage hostels, wardens, and students',
+                    gradient: const [AppTheme.adminPrimary, AppTheme.adminSecondary],
+                    onTap: () => context.push(AppRoutes.adminLogin),
+                  ),
+                  const SizedBox(height: 16),
+                  _RoleCard(
+                    icon: Icons.person_pin,
+                    label: 'Hostel Warden',
+                    description: 'Manage attendance, complaints & outpass',
+                    gradient: const [AppTheme.wardenPrimary, AppTheme.wardenSecondary],
+                    onTap: () => context.push(AppRoutes.wardenLogin),
+                  ),
+                  const SizedBox(height: 16),
+                  _RoleCard(
+                    icon: Icons.school,
+                    label: 'Student',
+                    description: 'View notices, complaints & outpass status',
+                    gradient: const [AppTheme.studentPrimary, AppTheme.studentSecondary],
+                    onTap: () => context.push(AppRoutes.studentLogin),
+                  ),
+                  const SizedBox(height: 32),
+                  Center(
+                    child: TextButton(
+                      onPressed: () => context.push(AppRoutes.colRegister),
+                      child: const Text(
+                        'Register a new college →',
+                        style: TextStyle(color: AppTheme.adminPrimary, fontSize: 14),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
                 ],
               ),
-              const SizedBox(height: 12),
-              const Text(
-                'Who are you?',
-                style: TextStyle(
-                  fontSize: 32,
-                  fontWeight: FontWeight.w800,
-                  color: AppTheme.textPrimary,
-                ),
-              ),
-              const SizedBox(height: 8),
-              const Text(
-                'Select your role to continue',
-                style: TextStyle(fontSize: 15, color: AppTheme.textSecondary),
-              ),
-              const SizedBox(height: 40),
-              _RoleCard(
-                icon: Icons.admin_panel_settings,
-                label: 'College Admin',
-                description: 'Manage hostels, wardens, and students',
-                gradient: const [AppTheme.adminPrimary, AppTheme.adminSecondary],
-                onTap: () => context.push(AppRoutes.adminLogin),
-              ),
-              const SizedBox(height: 16),
-              _RoleCard(
-                icon: Icons.person_pin,
-                label: 'Hostel Warden',
-                description: 'Manage attendance, complaints & outpass',
-                gradient: const [AppTheme.wardenPrimary, AppTheme.wardenSecondary],
-                onTap: () => context.push(AppRoutes.wardenLogin),
-              ),
-              const SizedBox(height: 16),
-              _RoleCard(
-                icon: Icons.school,
-                label: 'Student',
-                description: 'View notices, complaints & outpass status',
-                gradient: const [AppTheme.studentPrimary, AppTheme.studentSecondary],
-                onTap: () => context.push(AppRoutes.studentLogin),
-              ),
-              const Spacer(),
-              Center(
-                child: TextButton(
-                  onPressed: () => context.push(AppRoutes.colRegister),
-                  child: const Text(
-                    'Register a new college →',
-                    style: TextStyle(color: AppTheme.adminPrimary, fontSize: 14),
-                  ),
-                ),
-              ),
-            ],
+            ),
           ),
         ),
       ),

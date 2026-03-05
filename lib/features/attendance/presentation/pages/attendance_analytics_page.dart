@@ -2,7 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/constants/app_theme.dart';
-import '../../../../core/services/supabase_service.dart';
+import '../../../../core/services/firestore_service.dart';
 import '../../../../core/utils/date_formatter.dart';
 import '../../../../shared/widgets/loading_widget.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
@@ -28,15 +28,17 @@ class _AttendanceAnalyticsPageState extends ConsumerState<AttendanceAnalyticsPag
     final session = ref.read(sessionProvider).valueOrNull;
     if (session == null) return;
     final today = DateFormatter.formatDate(DateTime.now());
-    final hostels = await SupabaseService.instance.hostels
-        .select('id,name')
-        .eq('college_id', session.collegeId) as List;
+    final hostelsSnap = await FirestoreService.instance.hostels
+        .where('college_id', isEqualTo: session.collegeId)
+        .get();
+    final hostels = hostelsSnap.docs.map((d) => {'id': d.id, ...d.data()}).toList();
 
     final results = await Future.wait(hostels.map((h) async {
-      final records = await SupabaseService.instance.attendance
-          .select('status')
-          .eq('hostel_id', h['id'] as String)
-          .eq('date', today) as List;
+      final recordsSnap = await FirestoreService.instance.attendance
+          .where('hostel_id', isEqualTo: h['id'] as String)
+          .where('date', isEqualTo: today)
+          .get();
+      final records = recordsSnap.docs.map((d) => d.data()).toList();
       final present = records.where((r) => r['status'] == 'Present').length;
       return {'hostel': h['name'], 'present': present, 'total': records.length, 'absent': records.length - present};
     }));

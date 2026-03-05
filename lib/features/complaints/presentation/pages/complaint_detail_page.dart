@@ -79,7 +79,16 @@ class _ComplaintDetailPageState extends ConsumerState<ComplaintDetailPage> {
 
     return Scaffold(
       backgroundColor: AppTheme.bgDark,
-      appBar: AppBar(title: const Text('Complaint Detail')),
+      appBar: AppBar(
+        title: const Text('Complaint Detail'),
+        leading: const BackButton(),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: () { setState(() => _loading = true); _load(); },
+          ),
+        ],
+      ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -88,11 +97,75 @@ class _ComplaintDetailPageState extends ConsumerState<ComplaintDetailPage> {
             _Header(complaint: _complaint!),
             const SizedBox(height: 16),
             Text(_complaint!['description'] ?? '', style: const TextStyle(fontSize: 14, color: AppTheme.textSecondary, height: 1.5)),
-            if (_complaint!['image_url'] != null) ...[
+            if (_complaint!['image_url'] != null && _complaint!['image_url'].toString().isNotEmpty) ...[
               const SizedBox(height: 16),
-              ClipRRect(
-                borderRadius: BorderRadius.circular(12),
-                child: Image.network(_complaint!['image_url'], height: 200, width: double.infinity, fit: BoxFit.cover),
+              const Text('Attached Evidence', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: AppTheme.textPrimary)),
+              const SizedBox(height: 12),
+              GestureDetector(
+                onTap: () {
+                  showDialog(
+                    context: context,
+                    builder: (ctx) => Dialog(
+                      backgroundColor: Colors.transparent,
+                      insetPadding: const EdgeInsets.all(10),
+                      child: Stack(
+                        alignment: Alignment.topRight,
+                        children: [
+                          InteractiveViewer(
+                            panEnabled: true,
+                            minScale: 0.5,
+                            maxScale: 4.0,
+                            child: Image.network(_complaint!['image_url']),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.close, color: Colors.white, size: 30),
+                            onPressed: () => Navigator.pop(ctx),
+                          )
+                        ],
+                      ),
+                    ),
+                  );
+                },
+                child: Container(
+                  width: double.infinity,
+                  constraints: const BoxConstraints(maxHeight: 300),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(12),
+                    color: AppTheme.bgSurface,
+                    border: Border.all(color: AppTheme.divider),
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: Image.network(
+                      _complaint!['image_url'],
+                      fit: BoxFit.contain,
+                      loadingBuilder: (context, child, loadingProgress) {
+                        if (loadingProgress == null) return child;
+                        return const Center(
+                          child: Padding(
+                            padding: EdgeInsets.all(32.0),
+                            child: CircularProgressIndicator(),
+                          ),
+                        );
+                      },
+                      errorBuilder: (context, error, stackTrace) {
+                        return const Center(
+                          child: Padding(
+                            padding: EdgeInsets.all(32.0),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(Icons.broken_image, color: AppTheme.textSecondary, size: 40),
+                                SizedBox(height: 8),
+                                Text('Failed to load image', style: TextStyle(color: AppTheme.textSecondary)),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ),
               ),
             ],
             if (canChangeStatus) ...[
@@ -135,6 +208,19 @@ class _Header extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          if (complaint['students'] != null) ...[
+            Row(
+              children: [
+                const Icon(Icons.person_outline, size: 14, color: AppTheme.adminPrimary),
+                const SizedBox(width: 6),
+                Text(
+                  '${complaint['students']['name']} (${complaint['students']['register_number']})',
+                  style: const TextStyle(fontSize: 12, color: AppTheme.adminPrimary, fontWeight: FontWeight.w600),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+          ],
           Text(complaint['title'] ?? '', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppTheme.textPrimary)),
           const SizedBox(height: 8),
           Row(children: [
@@ -208,7 +294,7 @@ class _HistoryItem extends StatelessWidget {
               children: [
                 Text(
                   '${item['old_status'] ?? 'Created'} → ${item['new_status']}',
-                  style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppTheme.textPrimary),
+                  style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppTheme.textPrimary),
                 ),
                 if (item['note'] != null) ...[
                   const SizedBox(height: 3),

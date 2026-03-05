@@ -2,7 +2,7 @@
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'firestore_service.dart';
 import 'supabase_service.dart';
 
 @pragma('vm:entry-point')
@@ -103,13 +103,15 @@ class NotificationService {
     final token = _currentToken ?? await refreshToken();
     if (token == null) return;
     try {
-      await SupabaseService.instance.deviceTokens.upsert({
+      // Use composite doc ID for upsert behavior
+      final docId = '${userId}_$role';
+      await FirestoreService.instance.deviceTokens.doc(docId).set({
         'user_id': userId,
         'role': role,
         'college_id': collegeId,
         'fcm_token': token,
         'updated_at': DateTime.now().toIso8601String(),
-      }, onConflict: 'user_id,role');
+      });
     } catch (e) {
       debugPrint('Save token error: $e');
     }
@@ -164,15 +166,15 @@ class NotificationService {
     required String collegeId,
   }) async {
     try {
-      // Get FCM tokens from device_tokens table
-      final rows = await SupabaseService.instance.deviceTokens
-          .select('fcm_token')
-          .eq('college_id', collegeId)
-          .eq('role', role)
-          .inFilter('user_id', recipientIds);
+      // Get FCM tokens from Firestore device_tokens collection
+      final snap = await FirestoreService.instance.deviceTokens
+          .where('college_id', isEqualTo: collegeId)
+          .where('role', isEqualTo: role)
+          .where('user_id', whereIn: recipientIds)
+          .get();
 
-      final tokens = (rows as List)
-          .map((r) => r['fcm_token'] as String)
+      final tokens = snap.docs
+          .map((d) => d.data()['fcm_token'] as String)
           .toList();
       if (tokens.isEmpty) return;
 
@@ -191,3 +193,4 @@ class NotificationService {
     }
   }
 }
+

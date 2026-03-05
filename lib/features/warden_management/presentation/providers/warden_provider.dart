@@ -1,21 +1,19 @@
-// lib/features/student_management/presentation/providers/student_provider.dart
+// lib/features/warden_management/presentation/providers/warden_provider.dart
 import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/services/firestore_service.dart';
-import '../../../../core/constants/app_constants.dart';
 import '../../../../core/utils/bcrypt_helper.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 
-final studentListProvider =
-    AsyncNotifierProvider<StudentListNotifier, List<Map<String, dynamic>>>(
-        StudentListNotifier.new);
+final wardenListProvider =
+    AsyncNotifierProvider<WardenListNotifier, List<Map<String, dynamic>>>(
+        WardenListNotifier.new);
 
-class StudentListNotifier
+class WardenListNotifier
     extends AsyncNotifier<List<Map<String, dynamic>>> {
   final _db = FirestoreService.instance;
   String _search = '';
   String? _hostelFilter;
-  String? _yearFilter;
 
   @override
   Future<List<Map<String, dynamic>>> build() async => _fetch();
@@ -24,11 +22,7 @@ class StudentListNotifier
     final session = ref.read(sessionProvider).valueOrNull;
     if (session == null) return [];
 
-    var query = _db.students.where('college_id', isEqualTo: session.collegeId);
-
-    if (session.role == AppConstants.roleWarden && session.hostelId != null) {
-      query = query.where('hostel_id', isEqualTo: session.hostelId!);
-    }
+    var query = _db.wardens.where('college_id', isEqualTo: session.collegeId);
 
     final snap = await query.get();
     final List<Map<String, dynamic>> rows = [];
@@ -37,7 +31,7 @@ class StudentListNotifier
       s['id'] = doc.id;
       
       final hostelId = s['hostel_id'];
-      if (hostelId != null) {
+      if (hostelId != null && hostelId != '') {
         final hSnap = await _db.hostels.doc(hostelId).get();
         if (hSnap.exists) {
           s['hostels'] = {'id': hSnap.id, 'name': hSnap.data()!['name']};
@@ -50,12 +44,11 @@ class StudentListNotifier
     // Client-side filter
     return rows.where((s) {
       final matchSearch = _search.isEmpty ||
-          (s['name'] as String).toLowerCase().contains(_search.toLowerCase()) ||
-          (s['register_number'] as String).toLowerCase().contains(_search.toLowerCase());
+          (s['name'] as String? ?? '').toLowerCase().contains(_search.toLowerCase()) ||
+          (s['warden_code'] as String? ?? '').toLowerCase().contains(_search.toLowerCase());
       final matchHostel = _hostelFilter == null || s['hostel_id'] == _hostelFilter;
-      final matchYear = _yearFilter == null || s['year'].toString() == _yearFilter;
-      return matchSearch && matchHostel && matchYear;
-    }).cast<Map<String, dynamic>>().toList();
+      return matchSearch && matchHostel;
+    }).toList();
   }
 
   void setSearch(String q) {
@@ -68,16 +61,11 @@ class StudentListNotifier
     ref.invalidateSelf();
   }
 
-  void setYearFilter(String? year) {
-    _yearFilter = year;
-    ref.invalidateSelf();
-  }
-
-  Future<void> addStudent(Map<String, dynamic> data) async {
+  Future<void> addWarden(Map<String, dynamic> data) async {
     final session = ref.read(sessionProvider).valueOrNull!;
     final hash = BcryptHelper.hashPassword(data['password']);
     data.remove('password');
-    await _db.students.add({
+    await _db.wardens.add({
       ...data,
       'college_id': session.collegeId,
       'password_hash': hash,
@@ -85,18 +73,20 @@ class StudentListNotifier
     ref.invalidateSelf();
   }
 
-  Future<void> updateStudent(String id, Map<String, dynamic> data) async {
+  Future<void> updateWarden(String id, Map<String, dynamic> data) async {
     final Map<String, dynamic> update = {...data};
     if (update.containsKey('password') && (update['password'] as String).isNotEmpty) {
       update['password_hash'] = BcryptHelper.hashPassword(update['password']);
     }
     update.remove('password');
-    await _db.students.doc(id).update(update);
+    await _db.wardens.doc(id).update(update);
     ref.invalidateSelf();
   }
 
-  Future<void> deleteStudent(String id) async {
-    await _db.students.doc(id).delete();
+  Future<void> deleteWarden(String id) async {
+    await _db.wardens.doc(id).delete();
+    // Also delete any token of this warden if we strictly wanted to, 
+    // but the system mostly cleans up old tokens over time or ignores invalid notifications
     ref.invalidateSelf();
   }
 }

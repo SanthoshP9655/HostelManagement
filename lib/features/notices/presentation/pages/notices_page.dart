@@ -25,7 +25,15 @@ class NoticesPage extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: AppTheme.bgDark,
-      appBar: AppBar(title: const Text('Notice Board')),
+      appBar: AppBar(
+        title: const Text('Notice Board'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: () => ref.invalidate(noticeListProvider),
+          ),
+        ],
+      ),
       floatingActionButton: canCreate
           ? FloatingActionButton.extended(
               onPressed: () => context.push(formRoute),

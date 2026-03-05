@@ -4,11 +4,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_theme.dart';
 import '../../../../core/router/app_router.dart';
-import '../../../../core/services/supabase_service.dart';
+import '../../../../core/services/firestore_service.dart';
 import '../../../../shared/widgets/stat_card.dart';
 import '../../../../shared/widgets/loading_widget.dart';
-import '../../../../shared/layouts/responsive_layout.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../student_management/presentation/pages/student_list_page.dart';
+import '../../../hostel_management/presentation/pages/hostel_list_page.dart';
+import '../../../complaints/presentation/pages/complaints_page.dart';
+import '../../../warden_management/presentation/pages/warden_list_page.dart';
 
 class AdminDashboardPage extends ConsumerStatefulWidget {
   const AdminDashboardPage({super.key});
@@ -19,6 +22,49 @@ class AdminDashboardPage extends ConsumerStatefulWidget {
 
 class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
   int _selectedIndex = 0;
+
+  @override
+  Widget build(BuildContext context) {
+    // Build the body for the selected tab
+    final body = IndexedStack(
+      index: _selectedIndex,
+      children: const [
+        _AdminDashboardBody(),
+        StudentListPage(role: 'admin'),
+        WardenListPage(),
+        HostelListPage(),
+        ComplaintsPage(role: 'admin'),
+      ],
+    );
+
+    return Scaffold(
+      backgroundColor: AppTheme.bgDark,
+      body: body,
+      bottomNavigationBar: NavigationBar(
+        backgroundColor: AppTheme.bgCard,
+        selectedIndex: _selectedIndex,
+        onDestinationSelected: (i) => setState(() => _selectedIndex = i),
+        destinations: const [
+          NavigationDestination(icon: Icon(Icons.dashboard_outlined), selectedIcon: Icon(Icons.dashboard, color: AppTheme.adminPrimary), label: 'Dashboard'),
+          NavigationDestination(icon: Icon(Icons.school_outlined), selectedIcon: Icon(Icons.school, color: AppTheme.adminPrimary), label: 'Students'),
+          NavigationDestination(icon: Icon(Icons.person_outline), selectedIcon: Icon(Icons.person, color: AppTheme.adminPrimary), label: 'Wardens'),
+          NavigationDestination(icon: Icon(Icons.apartment_outlined), selectedIcon: Icon(Icons.apartment, color: AppTheme.adminPrimary), label: 'Hostels'),
+          NavigationDestination(icon: Icon(Icons.report_outlined), selectedIcon: Icon(Icons.report, color: AppTheme.adminPrimary), label: 'Complaints'),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Dashboard tab body ──────────────────────────────────────────
+class _AdminDashboardBody extends ConsumerStatefulWidget {
+  const _AdminDashboardBody();
+
+  @override
+  ConsumerState<_AdminDashboardBody> createState() => _AdminDashboardBodyState();
+}
+
+class _AdminDashboardBodyState extends ConsumerState<_AdminDashboardBody> {
   Map<String, int> _stats = {};
   bool _loading = true;
 
@@ -32,99 +78,125 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
     final session = ref.read(sessionProvider).valueOrNull;
     if (session == null) return;
 
-    final db = SupabaseService.instance;
+    final db = FirestoreService.instance;
     try {
-      final hostels = await db.hostels.select('id').eq('college_id', session.collegeId) as List;
-      final students = await db.students.select('id').eq('college_id', session.collegeId) as List;
-      final complaints = await db.complaints.select('id,status').eq('college_id', session.collegeId) as List;
-      final outpasses = await db.outpasses.select('id,status').eq('college_id', session.collegeId) as List;
+      final hostelsSnap = await db.hostels.where('college_id', isEqualTo: session.collegeId).get();
+      final wardensSnap = await db.wardens.where('college_id', isEqualTo: session.collegeId).get();
+      final studentsSnap = await db.students.where('college_id', isEqualTo: session.collegeId).get();
+      final complaintsSnap = await db.complaints.where('college_id', isEqualTo: session.collegeId).get();
 
+      final complaints = complaintsSnap.docs.map((d) => d.data()).toList();
+
+      if (!mounted) return;
       setState(() {
         _stats = {
-          'hostels': hostels.length,
-          'students': students.length,
+          'hostels': hostelsSnap.docs.length,
+          'wardens': wardensSnap.docs.length,
+          'students': studentsSnap.docs.length,
           'complaints': complaints.length,
           'pending': complaints.where((c) => c['status'] == 'Pending').length,
           'in_progress': complaints.where((c) => c['status'] == 'In Progress').length,
           'resolved': complaints.where((c) => c['status'] == 'Resolved').length,
-          'outpass_pending': outpasses.where((o) => o['status'] == 'Pending').length,
-          'outpass_approved': outpasses.where((o) => o['status'] == 'Approved').length,
         };
         _loading = false;
       });
     } catch (_) {
-      setState(() => _loading = false);
+      if (mounted) setState(() => _loading = false);
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final session = ref.watch(sessionProvider).valueOrNull;
-    final items = [
-      const NavigationItem(icon: Icons.dashboard_outlined, activeIcon: Icons.dashboard, label: 'Dashboard'),
-      const NavigationItem(icon: Icons.school_outlined, activeIcon: Icons.school, label: 'Students'),
-      const NavigationItem(icon: Icons.apartment_outlined, activeIcon: Icons.apartment, label: 'Hostels'),
-      const NavigationItem(icon: Icons.report_outlined, activeIcon: Icons.report, label: 'Complaints'),
-      const NavigationItem(icon: Icons.campaign_outlined, activeIcon: Icons.campaign, label: 'Notices'),
-    ];
 
-    return ResponsiveLayout(
-      title: 'Admin Dashboard',
-      selectedIndex: _selectedIndex,
-      items: items,
-      onItemSelected: (i) {
-        setState(() => _selectedIndex = i);
-        final routes = [
-          AppRoutes.adminDashboard,
-          AppRoutes.adminStudents,
-          AppRoutes.adminHostels,
-          AppRoutes.adminComplaints,
-          AppRoutes.adminNotices,
-        ];
-        context.go(routes[i]);
-      },
-      actions: [
-        IconButton(
-          icon: const Icon(Icons.refresh_outlined),
-          onPressed: () { setState(() => _loading = true); _loadStats(); },
+    return Scaffold(
+      backgroundColor: AppTheme.bgDark,
+      appBar: AppBar(
+        title: const Text('Admin Dashboard'),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => ref.read(sessionProvider.notifier).logout(),
+          tooltip: 'Back to Role Selection',
         ),
-        PopupMenuButton(
-          icon: const Icon(Icons.more_vert),
-          itemBuilder: (_) => [
-            PopupMenuItem(
-              child: const Text('Attendance Analytics'),
-              onTap: () => context.push(AppRoutes.adminAttendance),
-            ),
-            PopupMenuItem(
-              child: const Text('Logout', style: TextStyle(color: AppTheme.error)),
-              onTap: () => ref.read(sessionProvider.notifier).logout(),
-            ),
-          ],
-        ),
-      ],
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.campaign_outlined),
+            onPressed: () => context.push(AppRoutes.adminNotices),
+          ),
+          IconButton(
+            icon: const Icon(Icons.refresh_outlined),
+            onPressed: () { setState(() => _loading = true); _loadStats(); },
+          ),
+          PopupMenuButton(
+            icon: const Icon(Icons.more_vert),
+            itemBuilder: (_) => [
+              PopupMenuItem(
+                child: const Text('Attendance Analytics'),
+                onTap: () => context.push(AppRoutes.adminAttendance),
+              ),
+              PopupMenuItem(
+                child: const Text('Logout', style: TextStyle(color: AppTheme.error)),
+                onTap: () => ref.read(sessionProvider.notifier).logout(),
+              ),
+            ],
+          ),
+        ],
+      ),
       body: _loading
-          ? const LoadingWidget()
-          : RefreshIndicator(
-              onRefresh: _loadStats,
-              child: SingleChildScrollView(
-                physics: const AlwaysScrollableScrollPhysics(),
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _welcome(session?.name ?? ''),
-                    const SizedBox(height: 20),
-                    const Text('Overview', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.textPrimary)),
-                    const SizedBox(height: 12),
-                    _StatGrid(stats: _stats),
-                    const SizedBox(height: 24),
-                    const Text('Complaints Summary', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.textPrimary)),
-                    const SizedBox(height: 12),
-                    _ComplaintSummary(stats: _stats),
-                  ],
-                ),
+        ? const LoadingWidget()
+        : RefreshIndicator(
+            onRefresh: _loadStats,
+            child: SingleChildScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _welcome(session?.name ?? ''),
+                  const SizedBox(height: 20),
+                  const Text('Overview', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.textPrimary)),
+                  const SizedBox(height: 12),
+                  _buildStatGrid(context),
+                  const SizedBox(height: 24),
+                  const Text('Complaints Summary', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.textPrimary)),
+                  const SizedBox(height: 12),
+                  _buildComplaintSummary(),
+                ],
               ),
             ),
+          ),
+    );
+  }
+
+  Widget _buildStatGrid(BuildContext context) {
+    return GridView.count(
+      crossAxisCount: MediaQuery.of(context).size.width > 600 ? 4 : 2,
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      crossAxisSpacing: 12,
+      mainAxisSpacing: 12,
+      childAspectRatio: 1.4,
+      children: [
+        StatCard(title: 'Total Hostels', value: '${_stats['hostels'] ?? 0}', icon: Icons.apartment, color: AppTheme.adminPrimary),
+        StatCard(title: 'Total Wardens', value: '${_stats['wardens'] ?? 0}', icon: Icons.person, color: AppTheme.info),
+        StatCard(title: 'Total Students', value: '${_stats['students'] ?? 0}', icon: Icons.school, color: AppTheme.wardenPrimary),
+        StatCard(title: 'Total Complaints', value: '${_stats['complaints'] ?? 0}', icon: Icons.report, color: AppTheme.studentPrimary),
+      ],
+    );
+  }
+
+  Widget _buildComplaintSummary() {
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        children: [
+          SizedBox(width: 110, height: 120, child: StatCard(title: 'Pending', value: '${_stats['pending'] ?? 0}', icon: Icons.hourglass_empty, color: AppTheme.statusPending)),
+          const SizedBox(width: 12),
+          SizedBox(width: 110, height: 120, child: StatCard(title: 'In Progress', value: '${_stats['in_progress'] ?? 0}', icon: Icons.work_outline, color: AppTheme.statusInProgress)),
+          const SizedBox(width: 12),
+          SizedBox(width: 110, height: 120, child: StatCard(title: 'Resolved', value: '${_stats['resolved'] ?? 0}', icon: Icons.check_circle_outline, color: AppTheme.statusResolved)),
+        ],
+      ),
     );
   }
 
@@ -143,57 +215,18 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
         children: [
           const Icon(Icons.admin_panel_settings, color: Colors.white, size: 40),
           const SizedBox(width: 16),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text('Welcome back,', style: TextStyle(color: Colors.white70, fontSize: 13)),
-              Text(name, style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w700)),
-              const Text('College Administrator', style: TextStyle(color: Colors.white60, fontSize: 12)),
-            ],
+          Flexible(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('Welcome back,', style: TextStyle(color: Colors.white70, fontSize: 13)),
+                Text(name, style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w700), overflow: TextOverflow.ellipsis),
+                const Text('College Administrator', style: TextStyle(color: Colors.white60, fontSize: 12)),
+              ],
+            ),
           ),
         ],
       ),
-    );
-  }
-}
-
-class _StatGrid extends StatelessWidget {
-  final Map<String, int> stats;
-  const _StatGrid({required this.stats});
-
-  @override
-  Widget build(BuildContext context) {
-    return GridView.count(
-      crossAxisCount: MediaQuery.of(context).size.width > 600 ? 4 : 2,
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      crossAxisSpacing: 12,
-      mainAxisSpacing: 12,
-      childAspectRatio: 1.4,
-      children: [
-        StatCard(title: 'Total Hostels', value: '${stats['hostels'] ?? 0}', icon: Icons.apartment, color: AppTheme.adminPrimary),
-        StatCard(title: 'Total Students', value: '${stats['students'] ?? 0}', icon: Icons.school, color: AppTheme.wardenPrimary),
-        StatCard(title: 'Total Complaints', value: '${stats['complaints'] ?? 0}', icon: Icons.report, color: AppTheme.studentPrimary),
-        StatCard(title: 'Outpass Pending', value: '${stats['outpass_pending'] ?? 0}', icon: Icons.exit_to_app, color: AppTheme.warning),
-      ],
-    );
-  }
-}
-
-class _ComplaintSummary extends StatelessWidget {
-  final Map<String, int> stats;
-  const _ComplaintSummary({required this.stats});
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Expanded(child: StatCard(title: 'Pending', value: '${stats['pending'] ?? 0}', icon: Icons.hourglass_empty, color: AppTheme.statusPending)),
-        const SizedBox(width: 12),
-        Expanded(child: StatCard(title: 'In Progress', value: '${stats['in_progress'] ?? 0}', icon: Icons.work_outline, color: AppTheme.statusInProgress)),
-        const SizedBox(width: 12),
-        Expanded(child: StatCard(title: 'Resolved', value: '${stats['resolved'] ?? 0}', icon: Icons.check_circle_outline, color: AppTheme.statusResolved)),
-      ],
     );
   }
 }

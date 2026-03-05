@@ -18,7 +18,12 @@ class HostelListPage extends ConsumerWidget {
       backgroundColor: AppTheme.bgDark,
       appBar: AppBar(
         title: const Text('Hostels'),
+        leading: const BackButton(),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: () => ref.invalidate(hostelListProvider),
+          ),
           IconButton(
             icon: const Icon(Icons.add),
             onPressed: () => context.push(AppRoutes.adminHostelForm),

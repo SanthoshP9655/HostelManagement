@@ -11,20 +11,14 @@ import '../../features/auth/presentation/providers/auth_provider.dart';
 import '../../features/dashboard/presentation/pages/admin_dashboard_page.dart';
 import '../../features/dashboard/presentation/pages/warden_dashboard_page.dart';
 import '../../features/dashboard/presentation/pages/student_dashboard_page.dart';
-import '../../features/student_management/presentation/pages/student_list_page.dart';
 import '../../features/student_management/presentation/pages/student_form_page.dart';
-import '../../features/hostel_management/presentation/pages/hostel_list_page.dart';
 import '../../features/hostel_management/presentation/pages/hostel_form_page.dart';
-import '../../features/complaints/presentation/pages/complaints_page.dart';
 import '../../features/complaints/presentation/pages/complaint_form_page.dart';
 import '../../features/complaints/presentation/pages/complaint_detail_page.dart';
-import '../../features/attendance/presentation/pages/attendance_mark_page.dart';
-import '../../features/attendance/presentation/pages/my_attendance_page.dart';
 import '../../features/attendance/presentation/pages/attendance_analytics_page.dart';
 import '../../features/notices/presentation/pages/notices_page.dart';
 import '../../features/notices/presentation/pages/notice_form_page.dart';
-import '../../features/outpass/presentation/pages/outpass_student_page.dart';
-import '../../features/outpass/presentation/pages/outpass_warden_page.dart';
+import '../../features/warden_management/presentation/pages/warden_form_page.dart';
 import '../../core/constants/app_constants.dart';
 
 class AppRoutes {
@@ -33,29 +27,31 @@ class AppRoutes {
   static const adminLogin = '/admin/login';
   static const adminDashboard = '/admin/dashboard';
   static const adminStudents = '/admin/students';
-  static const adminStudentForm = '/admin/students/form';
+  static const adminStudentForm = '/admin/student-form';
+  static const adminWardens = '/admin/wardens';
+  static const adminWardenForm = '/admin/warden-form';
   static const adminHostels = '/admin/hostels';
-  static const adminHostelForm = '/admin/hostels/form';
+  static const adminHostelForm = '/admin/hostel-form';
   static const adminComplaints = '/admin/complaints';
-  static const adminComplaintDetail = '/admin/complaints/detail';
+  static const adminComplaintDetail = '/admin/complaint-detail';
   static const adminNotices = '/admin/notices';
-  static const adminNoticeForm = '/admin/notices/form';
+  static const adminNoticeForm = '/admin/notice-form';
   static const adminAttendance = '/admin/attendance';
   static const wardenLogin = '/warden/login';
   static const wardenDashboard = '/warden/dashboard';
   static const wardenStudents = '/warden/students';
-  static const wardenStudentForm = '/warden/students/form';
+  static const wardenStudentForm = '/warden/student-form';
   static const wardenComplaints = '/warden/complaints';
-  static const wardenComplaintDetail = '/warden/complaints/detail';
+  static const wardenComplaintDetail = '/warden/complaint-detail';
   static const wardenAttendance = '/warden/attendance';
   static const wardenNotices = '/warden/notices';
-  static const wardenNoticeForm = '/warden/notices/form';
+  static const wardenNoticeForm = '/warden/notice-form';
   static const wardenOutpass = '/warden/outpass';
   static const studentLogin = '/student/login';
   static const studentDashboard = '/student/dashboard';
   static const studentComplaints = '/student/complaints';
-  static const studentComplaintForm = '/student/complaints/form';
-  static const studentComplaintDetail = '/student/complaints/detail';
+  static const studentComplaintForm = '/student/complaint-form';
+  static const studentComplaintDetail = '/student/complaint-detail';
   static const studentAttendance = '/student/attendance';
   static const studentNotices = '/student/notices';
   static const studentOutpass = '/student/outpass';
@@ -74,25 +70,27 @@ class _RouterNotifier extends ChangeNotifier {
     final session = sessionAsync.valueOrNull;
     final loc = state.uri.toString();
 
-    const publicRoutes = [
-      AppRoutes.roleSelector,
-      AppRoutes.adminLogin,
-      AppRoutes.wardenLogin,
-      AppRoutes.studentLogin,
-      AppRoutes.colRegister,
-    ];
+    // Helper to check if current location is a public route
+    bool isPublicRoute() {
+      if (loc == AppRoutes.roleSelector) return true;
+      if (loc.startsWith(AppRoutes.adminLogin)) return true;
+      if (loc.startsWith(AppRoutes.wardenLogin)) return true;
+      if (loc.startsWith(AppRoutes.studentLogin)) return true;
+      if (loc.startsWith(AppRoutes.colRegister)) return true;
+      return false;
+    }
 
     // While loading session, stay put
     if (sessionAsync.isLoading) return null;
 
     if (session == null) {
       // Not logged in – allow only public routes
-      if (publicRoutes.any((r) => loc.startsWith(r))) return null;
+      if (isPublicRoute()) return null;
       return AppRoutes.roleSelector;
     }
 
     // Logged in – if on a public/login route, go to correct dashboard
-    if (publicRoutes.any((r) => loc == r || loc.startsWith(r))) {
+    if (isPublicRoute()) {
       return _dashboardForRole(session.role);
     }
 
@@ -126,35 +124,24 @@ final routerProvider = Provider<GoRouter>((ref) {
 
       // ── Admin ─────────────────────────────────────────────
       GoRoute(path: AppRoutes.adminDashboard, builder: (c, s) => const AdminDashboardPage()),
-      GoRoute(path: AppRoutes.adminStudents, builder: (c, s) => const StudentListPage(role: 'admin')),
       GoRoute(path: AppRoutes.adminStudentForm, builder: (c, s) => StudentFormPage(student: s.extra as Map<String, dynamic>?)),
-      GoRoute(path: AppRoutes.adminHostels, builder: (c, s) => const HostelListPage()),
+      GoRoute(path: AppRoutes.adminWardenForm, builder: (c, s) => WardenFormPage(warden: s.extra as Map<String, dynamic>?)),
       GoRoute(path: AppRoutes.adminHostelForm, builder: (c, s) => HostelFormPage(hostel: s.extra as Map<String, dynamic>?)),
-      GoRoute(path: AppRoutes.adminComplaints, builder: (c, s) => const ComplaintsPage(role: 'admin')),
       GoRoute(path: AppRoutes.adminComplaintDetail, builder: (c, s) => ComplaintDetailPage(complaintId: s.extra as String)),
-      GoRoute(path: AppRoutes.adminNotices, builder: (c, s) => const NoticesPage(role: 'admin')),
       GoRoute(path: AppRoutes.adminNoticeForm, builder: (c, s) => NoticeFormPage(notice: s.extra as Map<String, dynamic>?)),
       GoRoute(path: AppRoutes.adminAttendance, builder: (c, s) => const AttendanceAnalyticsPage()),
 
       // ── Warden ────────────────────────────────────────────
       GoRoute(path: AppRoutes.wardenDashboard, builder: (c, s) => const WardenDashboardPage()),
-      GoRoute(path: AppRoutes.wardenStudents, builder: (c, s) => const StudentListPage(role: 'warden')),
       GoRoute(path: AppRoutes.wardenStudentForm, builder: (c, s) => StudentFormPage(student: s.extra as Map<String, dynamic>?)),
-      GoRoute(path: AppRoutes.wardenComplaints, builder: (c, s) => const ComplaintsPage(role: 'warden')),
       GoRoute(path: AppRoutes.wardenComplaintDetail, builder: (c, s) => ComplaintDetailPage(complaintId: s.extra as String)),
-      GoRoute(path: AppRoutes.wardenAttendance, builder: (c, s) => const AttendanceMarkPage()),
       GoRoute(path: AppRoutes.wardenNotices, builder: (c, s) => const NoticesPage(role: 'warden')),
       GoRoute(path: AppRoutes.wardenNoticeForm, builder: (c, s) => NoticeFormPage(notice: s.extra as Map<String, dynamic>?)),
-      GoRoute(path: AppRoutes.wardenOutpass, builder: (c, s) => const OutpassWardenPage()),
 
       // ── Student ───────────────────────────────────────────
       GoRoute(path: AppRoutes.studentDashboard, builder: (c, s) => const StudentDashboardPage()),
-      GoRoute(path: AppRoutes.studentComplaints, builder: (c, s) => const ComplaintsPage(role: 'student')),
       GoRoute(path: AppRoutes.studentComplaintForm, builder: (c, s) => const ComplaintFormPage()),
       GoRoute(path: AppRoutes.studentComplaintDetail, builder: (c, s) => ComplaintDetailPage(complaintId: s.extra as String)),
-      GoRoute(path: AppRoutes.studentAttendance, builder: (c, s) => const MyAttendancePage()),
-      GoRoute(path: AppRoutes.studentNotices, builder: (c, s) => const NoticesPage(role: 'student')),
-      GoRoute(path: AppRoutes.studentOutpass, builder: (c, s) => const OutpassStudentPage()),
     ],
   );
 });

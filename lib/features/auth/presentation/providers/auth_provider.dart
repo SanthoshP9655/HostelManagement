@@ -25,11 +25,15 @@ class SessionNotifier extends AsyncNotifier<UserSession?> {
         password: password,
         collegeCode: collegeCode,
       );
-      await NotificationService.instance.saveToken(
-        userId: session.id,
-        role: session.role,
-        collegeId: session.collegeId,
-      );
+      try {
+        await NotificationService.instance.saveToken(
+          userId: session.id,
+          role: session.role,
+          collegeId: session.collegeId,
+        );
+      } catch (e) {
+        // Ignore token save errors on login (e.g. web notifications denied)
+      }
       return session;
     });
   }
@@ -46,11 +50,15 @@ class SessionNotifier extends AsyncNotifier<UserSession?> {
         wardenCode: wardenCode,
         password: password,
       );
-      await NotificationService.instance.saveToken(
-        userId: session.id,
-        role: session.role,
-        collegeId: session.collegeId,
-      );
+      try {
+        await NotificationService.instance.saveToken(
+          userId: session.id,
+          role: session.role,
+          collegeId: session.collegeId,
+        );
+      } catch (e) {
+        // Ignore token save errors on login (e.g. web notifications denied)
+      }
       return session;
     });
   }
@@ -67,11 +75,15 @@ class SessionNotifier extends AsyncNotifier<UserSession?> {
         registerNumber: registerNumber,
         password: password,
       );
-      await NotificationService.instance.saveToken(
-        userId: session.id,
-        role: session.role,
-        collegeId: session.collegeId,
-      );
+      try {
+        await NotificationService.instance.saveToken(
+          userId: session.id,
+          role: session.role,
+          collegeId: session.collegeId,
+        );
+      } catch (e) {
+        // Ignore token save errors on login (e.g. web notifications denied)
+      }
       return session;
     });
   }

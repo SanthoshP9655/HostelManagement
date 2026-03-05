@@ -14,18 +14,17 @@ import 'firebase_options.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // 1. Initialize Supabase
+  // 1. Initialize Supabase (for image storage)
   await SupabaseService.initialize();
 
-  if (!kIsWeb) {
-    // 2. Initialize Firebase (Android/iOS only)
-    // Web requires firebase-messaging-sw.js service worker + VAPID key (not configured)
-    await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  // 2. Initialize Firebase (all platforms — needed for Auth + Firestore)
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
-    // 3. Register FCM background handler
+  if (!kIsWeb) {
+    // 3. Register FCM background handler (mobile only)
     FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
 
-    // 4. Initialize notification service
+    // 4. Initialize notification service (mobile only)
     await NotificationService.instance.initialize();
   }
 

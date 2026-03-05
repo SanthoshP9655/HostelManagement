@@ -8,7 +8,7 @@ import '../../../../shared/widgets/app_text_field.dart';
 import '../../../../shared/widgets/app_button.dart';
 import '../../../../shared/widgets/app_snackbar.dart';
 import '../providers/student_provider.dart';
-import '../../../../core/services/supabase_service.dart';
+import '../../../../core/services/firestore_service.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 
 class StudentFormPage extends ConsumerStatefulWidget {
@@ -45,9 +45,10 @@ class _StudentFormPageState extends ConsumerState<StudentFormPage> {
   Future<void> _loadHostels() async {
     final session = ref.read(sessionProvider).valueOrNull;
     if (session == null) return;
-    final rows = await SupabaseService.instance.hostels
-        .select('id,name')
-        .eq('college_id', session.collegeId) as List;
+    final snap = await FirestoreService.instance.hostels
+        .where('college_id', isEqualTo: session.collegeId)
+        .get();
+    final rows = snap.docs.map((d) => {'id': d.id, ...d.data()}).toList();
     setState(() => _hostels = rows.cast<Map<String, dynamic>>());
   }
 

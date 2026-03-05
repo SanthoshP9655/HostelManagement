@@ -1,6 +1,6 @@
 // lib/features/outpass/presentation/providers/outpass_provider.dart
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../../core/services/supabase_service.dart';
+import '../../../../core/services/firestore_service.dart';
 import '../../../../core/services/notification_service.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
@@ -10,7 +10,7 @@ final outpassProvider =
         OutpassNotifier.new);
 
 class OutpassNotifier extends AsyncNotifier<List<Map<String, dynamic>>> {
-  final _db = SupabaseService.instance;
+  final _db = FirestoreService.instance;
   String? _statusFilter;
 
   @override
@@ -20,25 +20,42 @@ class OutpassNotifier extends AsyncNotifier<List<Map<String, dynamic>>> {
     final session = ref.read(sessionProvider).valueOrNull;
     if (session == null) return [];
 
-    var query = _db.client
-        .from('outpasses')
-        .select('*, students(id,name,register_number,room_number)')
-        .eq('college_id', session.collegeId);
+    var query = _db.outpasses.where('college_id', isEqualTo: session.collegeId);
 
     if (session.role == AppConstants.roleStudent) {
-      query = _db.client
-          .from('outpasses')
-          .select()
-          .eq('student_id', session.id);
+      query = _db.outpasses.where('student_id', isEqualTo: session.id);
     } else if (session.role == AppConstants.roleWarden && session.hostelId != null) {
-      query = _db.client
-          .from('outpasses')
-          .select('*, students(id,name,register_number,room_number)')
-          .eq('college_id', session.collegeId)
-          .eq('hostel_id', session.hostelId!);
+      query = query.where('hostel_id', isEqualTo: session.hostelId!);
     }
 
-    final rows = await query.order('created_at', ascending: false) as List;
+    final snap = await query.get();
+    final List<Map<String, dynamic>> rows = [];
+    
+    for (var doc in snap.docs) {
+      final o = doc.data();
+      o['id'] = doc.id;
+      
+      if (session.role != AppConstants.roleStudent) {
+        final studentDoc = await _db.students.doc(o['student_id']).get();
+        if (studentDoc.exists) {
+           final s = studentDoc.data()!;
+           o['students'] = {
+             'id': studentDoc.id,
+             'name': s['name'],
+             'register_number': s['register_number'],
+             'room_number': s['room_number']
+           };
+        }
+      }
+      rows.add(o);
+    }
+    
+    // Sort by created_at desc manually
+    rows.sort((a,b) {
+      final tA = a['created_at'] ?? '';
+      final tB = b['created_at'] ?? '';
+      return tB.toString().compareTo(tA.toString());
+    });
 
     if (_statusFilter != null) {
       return rows.where((o) => o['status'] == _statusFilter).toList().cast<Map<String, dynamic>>();
@@ -53,27 +70,26 @@ class OutpassNotifier extends AsyncNotifier<List<Map<String, dynamic>>> {
 
   Future<void> requestOutpass(String reason) async {
     final session = ref.read(sessionProvider).valueOrNull!;
-    final student = await _db.students
-        .select('hostel_id')
-        .eq('id', session.id)
-        .single();
+    final studentDoc = await _db.students.doc(session.id).get();
+    final student = studentDoc.data()!;
 
-    await _db.outpasses.insert({
+    await _db.outpasses.add({
       'college_id': session.collegeId,
       'student_id': session.id,
       'hostel_id': student['hostel_id'],
       'reason': reason,
       'status': 'Pending',
+      'created_at': DateTime.now().toIso8601String(),
     });
     ref.invalidateSelf();
   }
 
   Future<void> approveOutpass(String id, String studentId) async {
     final session = ref.read(sessionProvider).valueOrNull!;
-    await _db.outpasses.update({
+    await _db.outpasses.doc(id).update({
       'status': 'Approved',
       'approved_by': session.id,
-    }).eq('id', id);
+    });
 
     await NotificationService.instance.sendNotification(
       recipientIds: [studentId],
@@ -88,7 +104,7 @@ class OutpassNotifier extends AsyncNotifier<List<Map<String, dynamic>>> {
 
   Future<void> rejectOutpass(String id, String studentId) async {
     final session = ref.read(sessionProvider).valueOrNull!;
-    await _db.outpasses.update({'status': 'Rejected'}).eq('id', id);
+    await _db.outpasses.doc(id).update({'status': 'Rejected'});
 
     await NotificationService.instance.sendNotification(
       recipientIds: [studentId],
@@ -102,16 +118,16 @@ class OutpassNotifier extends AsyncNotifier<List<Map<String, dynamic>>> {
   }
 
   Future<void> markOut(String id) async {
-    await _db.outpasses.update({
+    await _db.outpasses.doc(id).update({
       'out_time': DateTime.now().toIso8601String(),
-    }).eq('id', id).eq('status', 'Approved');
+    });
     ref.invalidateSelf();
   }
 
   Future<void> markIn(String id) async {
-    await _db.outpasses.update({
+    await _db.outpasses.doc(id).update({
       'in_time': DateTime.now().toIso8601String(),
-    }).eq('id', id);
+    });
     ref.invalidateSelf();
   }
 }

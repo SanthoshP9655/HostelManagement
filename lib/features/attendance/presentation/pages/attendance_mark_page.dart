@@ -55,7 +55,12 @@ class _AttendanceMarkPageState extends ConsumerState<AttendanceMarkPage> {
       backgroundColor: AppTheme.bgDark,
       appBar: AppBar(
         title: const Text('Mark Attendance'),
+        leading: const BackButton(),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: () => ref.invalidate(attendanceProvider),
+          ),
           TextButton.icon(
             onPressed: _pickDate,
             icon: const Icon(Icons.calendar_today, size: 18),

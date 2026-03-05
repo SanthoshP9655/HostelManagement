@@ -1,6 +1,6 @@
 // lib/features/attendance/presentation/providers/attendance_provider.dart
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../../core/services/supabase_service.dart';
+import '../../../../core/services/firestore_service.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../../core/utils/date_formatter.dart';
 
@@ -14,7 +14,7 @@ final myAttendanceProvider =
 
 // ── Warden: mark attendance ───────────────────────────────────
 class AttendanceNotifier extends AsyncNotifier<List<Map<String, dynamic>>> {
-  final _db = SupabaseService.instance;
+  final _db = FirestoreService.instance;
   DateTime _selectedDate = DateTime.now();
 
   @override
@@ -27,24 +27,31 @@ class AttendanceNotifier extends AsyncNotifier<List<Map<String, dynamic>>> {
     final dateStr = DateFormatter.formatDate(_selectedDate);
 
     // Get students in warden's hostel
-    final students = await _db.students
-        .select('id,name,register_number,room_number')
-        .eq('college_id', session.collegeId)
-        .eq('hostel_id', session.hostelId ?? '')
-        .order('name') as List;
+    final studentsSnap = await _db.students
+        .where('college_id', isEqualTo: session.collegeId)
+        .where('hostel_id', isEqualTo: session.hostelId ?? '')
+        .get();
+
+    final students = studentsSnap.docs.map((d) {
+      final s = d.data();
+      s['id'] = d.id;
+      return s;
+    }).toList();
+    students.sort((a, b) => (a['name'] ?? '').toString().compareTo((b['name'] ?? '').toString()));
 
     // Get today's attendance
-    final existing = await _db.attendance
-        .select()
-        .eq('hostel_id', session.hostelId ?? '')
-        .eq('date', dateStr) as List;
+    final existingSnap = await _db.attendance
+        .where('hostel_id', isEqualTo: session.hostelId ?? '')
+        .where('date', isEqualTo: dateStr)
+        .get();
 
-    final attMap = {
-      for (var a in existing) a['student_id'] as String: a['status'] as String,
-    };
+    final attMap = <String, String>{};
+    for (var doc in existingSnap.docs) {
+      final a = doc.data();
+      attMap[a['student_id'] as String] = a['status'] as String;
+    }
 
-    return students.map((s) {
-      final sm = s as Map<String, dynamic>;
+    return students.map((sm) {
       return <String, dynamic>{
         ...sm,
         'attendance_status': attMap[sm['id']] ?? 'Present',
@@ -62,14 +69,16 @@ class AttendanceNotifier extends AsyncNotifier<List<Map<String, dynamic>>> {
     final session = ref.read(sessionProvider).valueOrNull!;
     final dateStr = DateFormatter.formatDate(_selectedDate);
 
-    await _db.attendance.upsert({
+    // Use composite doc ID for upsert behavior
+    final docId = '${studentId}_$dateStr';
+    await _db.attendance.doc(docId).set({
       'college_id': session.collegeId,
       'student_id': studentId,
       'hostel_id': hostelId,
       'date': dateStr,
       'status': status,
       'marked_by': session.id,
-    }, onConflict: 'student_id,date');
+    });
 
     ref.invalidateSelf();
   }
@@ -79,33 +88,38 @@ class AttendanceNotifier extends AsyncNotifier<List<Map<String, dynamic>>> {
     final session = ref.read(sessionProvider).valueOrNull!;
     final dateStr = DateFormatter.formatDate(_selectedDate);
 
-    final batch = records.map((r) => {
-      'college_id': session.collegeId,
-      'student_id': r['id'],
-      'hostel_id': session.hostelId,
-      'date': dateStr,
-      'status': r['attendance_status'],
-      'marked_by': session.id,
-    }).toList();
-
-    await _db.attendance.upsert(batch, onConflict: 'student_id,date');
+    final batch = _db.db.batch();
+    for (final r in records) {
+      final docId = '${r['id']}_$dateStr';
+      batch.set(_db.attendance.doc(docId), {
+        'college_id': session.collegeId,
+        'student_id': r['id'],
+        'hostel_id': session.hostelId,
+        'date': dateStr,
+        'status': r['attendance_status'],
+        'marked_by': session.id,
+      });
+    }
+    await batch.commit();
     ref.invalidateSelf();
   }
 }
 
 // ── Student: my attendance ────────────────────────────────────
 class MyAttendanceNotifier extends AsyncNotifier<List<Map<String, dynamic>>> {
-  final _db = SupabaseService.instance;
+  final _db = FirestoreService.instance;
 
   @override
   Future<List<Map<String, dynamic>>> build() async {
     final session = ref.read(sessionProvider).valueOrNull;
     if (session == null) return [];
 
-    final rows = await _db.attendance
-        .select()
-        .eq('student_id', session.id)
-        .order('date', ascending: false) as List;
+    final snap = await _db.attendance
+        .where('student_id', isEqualTo: session.id)
+        .get();
+
+    final rows = snap.docs.map((d) => {'id': d.id, ...d.data()}).toList();
+    rows.sort((a, b) => (b['date'] ?? '').toString().compareTo((a['date'] ?? '').toString()));
 
     return rows.cast<Map<String, dynamic>>();
   }
@@ -117,3 +131,4 @@ class MyAttendanceNotifier extends AsyncNotifier<List<Map<String, dynamic>>> {
     return (present / records.length) * 100;
   }
 }
+

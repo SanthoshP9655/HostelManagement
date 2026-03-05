@@ -31,7 +31,12 @@ class _ComplaintsPageState extends ConsumerState<ComplaintsPage> {
       backgroundColor: AppTheme.bgDark,
       appBar: AppBar(
         title: const Text('Complaints'),
+        leading: const BackButton(),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: () => ref.invalidate(complaintListProvider),
+          ),
           _FilterButton(role: widget.role),
         ],
       ),
@@ -147,9 +152,22 @@ class _ComplaintCard extends ConsumerWidget {
             Row(
               children: [
                 Expanded(
-                  child: Text(
-                    complaint['title'],
-                    style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppTheme.textPrimary),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        complaint['title'],
+                        style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppTheme.textPrimary),
+                      ),
+                      if (complaint['students'] != null)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 2),
+                          child: Text(
+                            'By: ${complaint['students']['name']}',
+                            style: const TextStyle(fontSize: 11, color: AppTheme.adminPrimary, fontWeight: FontWeight.w500),
+                          ),
+                        ),
+                    ],
                   ),
                 ),
                 Container(
@@ -162,9 +180,52 @@ class _ComplaintCard extends ConsumerWidget {
                 ),
               ],
             ),
-            const SizedBox(height: 6),
-            Text(complaint['description'], maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary)),
-            const SizedBox(height: 8),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        complaint['description'],
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary),
+                      ),
+                      const SizedBox(height: 8),
+                    ],
+                  ),
+                ),
+                if (complaint['image_url'] != null && complaint['image_url'].toString().isNotEmpty) ...[
+                  const SizedBox(width: 12),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(10),
+                    child: Image.network(
+                      complaint['image_url'],
+                      width: 64,
+                      height: 64,
+                      fit: BoxFit.cover,
+                      loadingBuilder: (context, child, loadingProgress) {
+                        if (loadingProgress == null) return child;
+                        return Container(
+                          width: 64,
+                          height: 64,
+                          color: AppTheme.bgSurface,
+                          child: const Center(child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))),
+                        );
+                      },
+                      errorBuilder: (_, __, ___) => Container(
+                        width: 64,
+                        height: 64,
+                        color: AppTheme.bgSurface,
+                        child: const Icon(Icons.broken_image, size: 24, color: AppTheme.textSecondary),
+                      ),
+                    ),
+                  ),
+                ],
+              ],
+            ),
             Row(children: [
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),

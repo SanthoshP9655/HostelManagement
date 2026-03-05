@@ -1,0 +1,71 @@
+name: hostel_management
+description: "Production-Grade SaaS Hostel Management System"
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.4.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # State Management
+  flutter_riverpod: ^2.5.1
+  riverpod_annotation: ^2.3.5
+
+  # Navigation
+  go_router: ^14.2.7
+
+  # Models
+  freezed_annotation: ^2.4.1
+  json_annotation: ^4.9.0
+
+  # Supabase
+  supabase_flutter: ^2.5.0
+
+  # Firebase
+  firebase_core: ^3.4.0
+  firebase_messaging: ^15.1.0
+  flutter_local_notifications: ^17.2.1
+
+  # Password Hashing
+  bcrypt: ^1.1.3
+
+  # Image
+  image_picker: ^1.1.2
+  cached_network_image: ^3.3.1
+
+  # Utils
+  flutter_dotenv: ^5.1.0
+  shared_preferences: ^2.3.1
+  intl: ^0.19.0
+  uuid: ^4.4.0
+  logger: ^2.4.0
+  equatable: ^2.0.5
+
+  # UI
+  responsive_framework: ^1.4.0
+  shimmer: ^3.0.0
+  fl_chart: ^0.69.0
+  google_fonts: ^6.2.1
+  flutter_svg: ^2.0.10+1
+  gap: ^3.0.1
+  lottie: ^3.1.2
+  cupertino_icons: ^1.0.8
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+  freezed: ^2.5.2
+  json_serializable: ^6.8.0
+  build_runner: ^2.4.11
+  riverpod_generator: ^2.4.0
+  custom_lint: ^0.6.4
+  riverpod_lint: ^2.3.10
+
+flutter:
+  uses-material-design: true
+  assets:
+    - .env

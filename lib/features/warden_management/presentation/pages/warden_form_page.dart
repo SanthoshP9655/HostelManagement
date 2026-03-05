@@ -132,6 +132,7 @@ class _WardenFormPageState extends ConsumerState<WardenFormPage> {
                     hostelsAsync.when(
                       data: (hostels) => DropdownButtonFormField<String>(
                         value: _selectedHostelId,
+                        isExpanded: true,
                         decoration: InputDecoration(
                           labelText: 'Assigned Hostel',
                           prefixIcon: const Icon(Icons.apartment, color: AppTheme.adminPrimary),
@@ -144,11 +145,12 @@ class _WardenFormPageState extends ConsumerState<WardenFormPage> {
                           filled: true,
                         ),
                         dropdownColor: AppTheme.bgCard,
+                        style: const TextStyle(color: AppTheme.textPrimary),
                         items: [
                           const DropdownMenuItem(value: null, child: Text('No Hostel Assigned')),
                           ...hostels.map((h) => DropdownMenuItem(
                                 value: h['id'] as String,
-                                child: Text(h['name'] as String),
+                                child: Text(h['name'] as String, overflow: TextOverflow.ellipsis),
                               ))
                         ],
                         onChanged: (v) => setState(() => _selectedHostelId = v),

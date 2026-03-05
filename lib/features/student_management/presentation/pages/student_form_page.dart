@@ -129,6 +129,7 @@ class _StudentFormPageState extends ConsumerState<StudentFormPage> {
               // Hostel dropdown
               DropdownButtonFormField<String>(
                 value: _selectedHostelId,
+                isExpanded: true,
                 decoration: InputDecoration(
                   labelText: 'Hostel',
                   filled: true,
@@ -137,7 +138,7 @@ class _StudentFormPageState extends ConsumerState<StudentFormPage> {
                 ),
                 dropdownColor: AppTheme.bgCard,
                 style: const TextStyle(color: AppTheme.textPrimary),
-                items: _hostels.map((h) => DropdownMenuItem<String>(value: h['id'], child: Text(h['name']))).toList(),
+                items: _hostels.map((h) => DropdownMenuItem<String>(value: h['id'], child: Text(h['name'], overflow: TextOverflow.ellipsis))).toList(),
                 onChanged: (v) => setState(() => _selectedHostelId = v),
                 validator: (v) => v == null ? 'Select a hostel' : null,
               ),

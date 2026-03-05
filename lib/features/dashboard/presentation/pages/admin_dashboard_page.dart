@@ -189,14 +189,23 @@ class _AdminDashboardBodyState extends ConsumerState<_AdminDashboardBody> {
   }
 
   Widget _buildComplaintSummary() {
-    return Row(
-      children: [
-        Expanded(child: StatCard(title: 'Pending', value: '${_stats['pending'] ?? 0}', icon: Icons.hourglass_empty, color: AppTheme.statusPending)),
-        const SizedBox(width: 12),
-        Expanded(child: StatCard(title: 'In Progress', value: '${_stats['in_progress'] ?? 0}', icon: Icons.work_outline, color: AppTheme.statusInProgress)),
-        const SizedBox(width: 12),
-        Expanded(child: StatCard(title: 'Resolved', value: '${_stats['resolved'] ?? 0}', icon: Icons.check_circle_outline, color: AppTheme.statusResolved)),
-      ],
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final crossAxisCount = constraints.maxWidth < 450 ? 2 : 3;
+        return GridView.count(
+          crossAxisCount: crossAxisCount,
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          crossAxisSpacing: 10,
+          mainAxisSpacing: 10,
+          childAspectRatio: 1.8,
+          children: [
+            StatCard(title: 'Pending', value: '${_stats['pending'] ?? 0}', icon: Icons.hourglass_empty, color: AppTheme.statusPending),
+            StatCard(title: 'In Progress', value: '${_stats['in_progress'] ?? 0}', icon: Icons.work_outline, color: AppTheme.statusInProgress),
+            StatCard(title: 'Resolved', value: '${_stats['resolved'] ?? 0}', icon: Icons.check_circle_outline, color: AppTheme.statusResolved),
+          ],
+        );
+      },
     );
   }
 

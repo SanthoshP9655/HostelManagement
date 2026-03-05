@@ -89,6 +89,7 @@ class _NoticeFormPageState extends ConsumerState<NoticeFormPage> {
             const SizedBox(height: 16),
             DropdownButtonFormField<String?>(
               value: _hostelId,
+              isExpanded: true,
               decoration: InputDecoration(
                 labelText: 'Target Hostel (leave blank for all)',
                 filled: true,
@@ -99,7 +100,7 @@ class _NoticeFormPageState extends ConsumerState<NoticeFormPage> {
               style: const TextStyle(color: AppTheme.textPrimary),
               items: [
                 const DropdownMenuItem(value: null, child: Text('All Students')),
-                ..._hostels.map((h) => DropdownMenuItem<String>(value: h['id'], child: Text(h['name']))),
+                ..._hostels.map((h) => DropdownMenuItem<String>(value: h['id'], child: Text(h['name'], overflow: TextOverflow.ellipsis))),
               ],
               onChanged: (v) => setState(() => _hostelId = v),
             ),

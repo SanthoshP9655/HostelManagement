@@ -209,12 +209,30 @@ class ComplaintListNotifier
 
   Future<String?> uploadImage(Uint8List bytes, String fileName) async {
     try {
-      final path = 'complaints/$fileName';
-      await _storage.uploadBinary(path, bytes,
-          fileOptions: const FileOptions(upsert: true));
-      return _storage.getPublicUrl(path);
+      // 1. Sanitize filename (remove spaces and special chars)
+      final sanitizedName = fileName.replaceAll(RegExp(r'[^a-zA-Z0-9.]'), '_');
+      final path = 'complaints/$sanitizedName';
+
+      debugPrint('Uploading image to Supabase: $path');
+
+      // 2. Upload with explicit content type
+      final extension = sanitizedName.split('.').last.toLowerCase();
+      final contentType = extension == 'png' ? 'image/png' : 'image/jpeg';
+
+      await _storage.uploadBinary(
+        path,
+        bytes,
+        fileOptions: FileOptions(
+          upsert: true,
+          contentType: contentType,
+        ),
+      );
+
+      final url = _storage.getPublicUrl(path);
+      debugPrint('Upload successful, URL: $url');
+      return url;
     } catch (e) {
-      debugPrint('Upload error: $e');
+      debugPrint('Supabase Upload Error: $e');
       return null;
     }
   }

@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/foundation.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'core/constants/app_theme.dart';
 import 'core/services/supabase_service.dart';
 import 'core/services/notification_service.dart';
@@ -14,10 +15,13 @@ import 'firebase_options.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // 1. Initialize Supabase (for image storage)
+  // 1. Initialize Env
+  await dotenv.load(fileName: ".env");
+
+  // 2. Initialize Supabase (for image storage)
   await SupabaseService.initialize();
 
-  // 2. Initialize Firebase (all platforms — needed for Auth + Firestore)
+  // 3. Initialize Firebase (all platforms — needed for Auth + Firestore)
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
   if (!kIsWeb) {

@@ -60,7 +60,12 @@ class AppRoutes {
 // A ChangeNotifier that bridges Riverpod session state → GoRouter refreshListenable
 class _RouterNotifier extends ChangeNotifier {
   _RouterNotifier(this._ref) {
-    _ref.listen(sessionProvider, (_, __) => notifyListeners());
+    // Listen to session changes and notify GoRouter
+    _ref.listen(sessionProvider, (_, next) {
+      if (!next.isLoading) {
+        notifyListeners();
+      }
+    });
   }
 
   final Ref _ref;
@@ -68,22 +73,24 @@ class _RouterNotifier extends ChangeNotifier {
   String? redirect(BuildContext context, GoRouterState state) {
     final sessionAsync = _ref.read(sessionProvider);
     final session = sessionAsync.valueOrNull;
-    final loc = state.uri.toString();
+    final loc = state.uri.path; // Use path instead of the full URI string
 
     // Helper to check if current location is a public route
     bool isPublicRoute() {
       if (loc == AppRoutes.roleSelector) return true;
-      if (loc.startsWith(AppRoutes.adminLogin)) return true;
-      if (loc.startsWith(AppRoutes.wardenLogin)) return true;
-      if (loc.startsWith(AppRoutes.studentLogin)) return true;
-      if (loc.startsWith(AppRoutes.colRegister)) return true;
+      if (loc == AppRoutes.adminLogin) return true;
+      if (loc == AppRoutes.wardenLogin) return true;
+      if (loc == AppRoutes.studentLogin) return true;
+      if (loc == AppRoutes.colRegister) return true;
       return false;
     }
 
-    // While loading session, stay put
-    if (sessionAsync.isLoading) return null;
+    // While loading initial session, we wait
+    if (sessionAsync.isLoading && session == null) return null;
 
-    if (session == null) {
+    final loggedIn = session != null;
+
+    if (!loggedIn) {
       // Not logged in – allow only public routes
       if (isPublicRoute()) return null;
       return AppRoutes.roleSelector;
@@ -94,12 +101,16 @@ class _RouterNotifier extends ChangeNotifier {
       return _dashboardForRole(session.role);
     }
 
-    // Prevent cross-role access
-    if (session.role == AppConstants.roleAdmin && loc.startsWith('/admin')) return null;
-    if (session.role == AppConstants.roleWarden && loc.startsWith('/warden')) return null;
-    if (session.role == AppConstants.roleStudent && loc.startsWith('/student')) return null;
+    // Role-based route protection
+    final isAdminRoute = loc.startsWith('/admin');
+    final isWardenRoute = loc.startsWith('/warden');
+    final isStudentRoute = loc.startsWith('/student');
 
-    return _dashboardForRole(session.role);
+    if (session.role == AppConstants.roleAdmin && !isAdminRoute) return AppRoutes.adminDashboard;
+    if (session.role == AppConstants.roleWarden && !isWardenRoute) return AppRoutes.wardenDashboard;
+    if (session.role == AppConstants.roleStudent && !isStudentRoute) return AppRoutes.studentDashboard;
+
+    return null;
   }
 }
 

@@ -1,5 +1,6 @@
 // lib/core/services/supabase_service.dart
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../constants/app_constants.dart';
 
 class SupabaseService {
@@ -8,8 +9,8 @@ class SupabaseService {
 
   static Future<void> initialize() async {
     await Supabase.initialize(
-      url: AppConstants.supabaseUrl,
-      anonKey: AppConstants.supabaseAnonKey,
+      url: dotenv.env['SUPABASE_URL'] ?? AppConstants.supabaseUrl,
+      anonKey: dotenv.env['SUPABASE_ANON_KEY'] ?? AppConstants.supabaseAnonKey,
     );
   }
 

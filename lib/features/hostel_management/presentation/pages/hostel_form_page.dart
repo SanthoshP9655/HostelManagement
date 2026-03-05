@@ -127,6 +127,7 @@ class _HostelFormPageState extends ConsumerState<HostelFormPage> {
               wardensAsync.when(
                 data: (wardens) => DropdownButtonFormField<String?>(
                   value: _selectedWardenId,
+                  isExpanded: true,
                   decoration: InputDecoration(
                     labelText: 'Select Warden (optional)',
                     labelStyle: const TextStyle(color: AppTheme.textSecondary),

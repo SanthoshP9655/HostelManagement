@@ -56,7 +56,7 @@ class StatCard extends StatelessWidget {
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: const TextStyle(
-                fontSize: 22,
+                fontSize: 18,
                 fontWeight: FontWeight.w800,
                 color: AppTheme.textPrimary,
               ),
@@ -64,17 +64,17 @@ class StatCard extends StatelessWidget {
             const SizedBox(height: 2),
             Text(
               title,
-              maxLines: 2,
+              maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(fontSize: 11, color: AppTheme.textSecondary),
+              style: const TextStyle(fontSize: 10, color: AppTheme.textSecondary, fontWeight: FontWeight.w500),
             ),
             if (subtitle != null) ...[
-              const SizedBox(height: 2),
+              const SizedBox(height: 1),
               Text(
                 subtitle!,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: TextStyle(fontSize: 10, color: color, fontWeight: FontWeight.w600),
+                style: TextStyle(fontSize: 9, color: color, fontWeight: FontWeight.w600),
               ),
             ],
           ],

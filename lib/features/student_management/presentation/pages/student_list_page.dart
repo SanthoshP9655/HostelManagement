@@ -72,7 +72,6 @@ class _StudentListPageState extends ConsumerState<StudentListPage> {
       backgroundColor: AppTheme.bgDark,
       appBar: AppBar(
         title: const Text('Students'),
-        leading: const BackButton(),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),

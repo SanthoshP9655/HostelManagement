@@ -31,17 +31,25 @@ class _AIRulesManagerTabState extends State<AIRulesManagerTab> {
   }
 
   Future<void> _uploadPDF() async {
-    FilePickerResult? result = await FilePicker.platform.pickFiles(type: FileType.custom, allowedExtensions: ['pdf']);
+    FilePickerResult? result = await FilePicker.platform.pickFiles(
+      type: FileType.custom, 
+      allowedExtensions: ['pdf'],
+      withData: true, // Need this to get bytes for web support
+    );
 
-    if (result != null && result.files.single.path != null) {
+    if (result != null && result.files.single.bytes != null) {
       setState(() => _isUploading = true);
       
       try {
-        final File file = File(result.files.single.path!);
+        final bytes = result.files.single.bytes!;
         final String fileName = 'hostel_rules_${DateTime.now().millisecondsSinceEpoch}.pdf';
         
-        // 1. Upload to Supabase Bucket 'rules'
-        await Supabase.instance.client.storage.from('rules').upload(fileName, file);
+        // 1. Upload to Supabase Bucket 'rules' as Binary (Web safe)
+        await Supabase.instance.client.storage.from('rules').uploadBinary(
+          fileName, 
+          bytes,
+          fileOptions: const FileOptions(contentType: 'application/pdf'),
+        );
         final String publicUrl = Supabase.instance.client.storage.from('rules').getPublicUrl(fileName);
             
         // 2. Update Firestore tracking
@@ -67,34 +75,41 @@ class _AIRulesManagerTabState extends State<AIRulesManagerTab> {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(24.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text('Manage AI Context Elements', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 12),
-          const Text('Upload the official hostel PDF. The student AI calculates its answers directly from this assigned document context.'),
-          const SizedBox(height: 32),
-          ListTile(
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            tileColor: Colors.blue.withOpacity(0.05),
-            leading: const Icon(Icons.description, color: Colors.blue),
-            title: const Text('Current Context Rules Document'),
-            subtitle: Text('Last Sync: ${_lastUpdated ?? "Never Uploaded"}'),
-          ),
-          const SizedBox(height: 32),
-          Center(
-            child: ElevatedButton.icon(
-              onPressed: _isUploading ? null : _uploadPDF,
-              icon: _isUploading 
-                ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
-                : const Icon(Icons.cloud_upload),
-              label: Text(_isUploading ? 'Validating & Uploading...' : 'Upload New Rules PDF'),
-              style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16)),
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 800),
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('Manage AI Context Elements', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+                const SizedBox(height: 12),
+                const Text('Upload the official hostel PDF. The student AI calculates its answers directly from this assigned document context.'),
+                const SizedBox(height: 32),
+                ListTile(
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  tileColor: Colors.blue.withOpacity(0.05),
+                  leading: const Icon(Icons.description, color: Colors.blue),
+                  title: const Text('Current Context Rules Document'),
+                  subtitle: Text('Last Sync: ${_lastUpdated ?? "Never Uploaded"}'),
+                ),
+                const SizedBox(height: 32),
+                Center(
+                  child: ElevatedButton.icon(
+                    onPressed: _isUploading ? null : _uploadPDF,
+                    icon: _isUploading 
+                      ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
+                      : const Icon(Icons.cloud_upload),
+                    label: Text(_isUploading ? 'Validating & Uploading...' : 'Upload New Rules PDF'),
+                    style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16)),
+                  ),
+                ),
+              ],
             ),
           ),
-        ],
+        ),
       ),
     );
   }

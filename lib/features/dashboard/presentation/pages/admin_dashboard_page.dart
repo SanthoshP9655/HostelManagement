@@ -181,7 +181,7 @@ class _AdminDashboardBodyState extends ConsumerState<_AdminDashboardBody> {
       physics: const NeverScrollableScrollPhysics(),
       crossAxisSpacing: 12,
       mainAxisSpacing: 12,
-      childAspectRatio: 1.5,
+      childAspectRatio: 1.15,
       children: [
         StatCard(title: 'Total Hostels', value: '${_stats['hostels'] ?? 0}', icon: Icons.apartment, color: AppTheme.adminPrimary),
         StatCard(title: 'Total Wardens', value: '${_stats['wardens'] ?? 0}', icon: Icons.person, color: AppTheme.info),
@@ -201,7 +201,7 @@ class _AdminDashboardBodyState extends ConsumerState<_AdminDashboardBody> {
           physics: const NeverScrollableScrollPhysics(),
           crossAxisSpacing: 10,
           mainAxisSpacing: 10,
-          childAspectRatio: 1.8,
+          childAspectRatio: 1.25,
           children: [
             StatCard(title: 'Pending', value: '${_stats['pending'] ?? 0}', icon: Icons.hourglass_empty, color: AppTheme.statusPending),
             StatCard(title: 'In Progress', value: '${_stats['in_progress'] ?? 0}', icon: Icons.work_outline, color: AppTheme.statusInProgress),

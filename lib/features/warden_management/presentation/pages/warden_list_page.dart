@@ -22,7 +22,6 @@ class WardenListPage extends ConsumerWidget {
       backgroundColor: AppTheme.bgDark,
       appBar: AppBar(
         title: const Text('Manage Wardens'),
-        leading: const BackButton(),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),

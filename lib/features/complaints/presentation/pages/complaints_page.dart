@@ -31,7 +31,6 @@ class _ComplaintsPageState extends ConsumerState<ComplaintsPage> {
       backgroundColor: AppTheme.bgDark,
       appBar: AppBar(
         title: const Text('Complaints'),
-        leading: const BackButton(),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),

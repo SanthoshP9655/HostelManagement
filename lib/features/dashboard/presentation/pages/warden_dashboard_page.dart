@@ -175,7 +175,7 @@ class _WardenDashboardBodyState extends ConsumerState<_WardenDashboardBody> {
                     physics: const NeverScrollableScrollPhysics(),
                     crossAxisSpacing: 12,
                     mainAxisSpacing: 12,
-                    childAspectRatio: 1.5,
+                    childAspectRatio: 1.15,
                     children: [
                       StatCard(title: 'Total Students', value: '${_stats['students'] ?? 0}', icon: Icons.school, color: AppTheme.wardenPrimary),
                       StatCard(title: 'Present Today', value: '${_stats['present_today'] ?? 0}', icon: Icons.check_circle_outline, color: AppTheme.success),

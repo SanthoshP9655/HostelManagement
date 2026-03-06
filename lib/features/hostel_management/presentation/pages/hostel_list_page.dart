@@ -18,7 +18,6 @@ class HostelListPage extends ConsumerWidget {
       backgroundColor: AppTheme.bgDark,
       appBar: AppBar(
         title: const Text('Hostels'),
-        leading: const BackButton(),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),

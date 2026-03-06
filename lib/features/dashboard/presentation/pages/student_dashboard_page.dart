@@ -42,6 +42,11 @@ class _StudentDashboardPageState extends ConsumerState<StudentDashboardPage> {
         bottomNavigationBar: NavigationBar(
           backgroundColor: AppTheme.bgCard,
           selectedIndex: _selectedIndex,
+          onDestinationSelected: (index) {
+            setState(() {
+              _selectedIndex = index;
+            });
+          },
           destinations: const [
             NavigationDestination(icon: Icon(Icons.dashboard_outlined), selectedIcon: Icon(Icons.dashboard, color: AppTheme.studentPrimary), label: 'Dashboard'),
             NavigationDestination(icon: Icon(Icons.report_outlined), selectedIcon: Icon(Icons.report, color: AppTheme.studentPrimary), label: 'Complaints'),
@@ -164,7 +169,7 @@ class _StudentDashboardBodyState extends ConsumerState<_StudentDashboardBody> {
                     physics: const NeverScrollableScrollPhysics(),
                     crossAxisSpacing: 12,
                     mainAxisSpacing: 12,
-                    childAspectRatio: 1.5,
+                    childAspectRatio: 1.15,
                     children: [
                       StatCard(
                         title: 'My Complaints',

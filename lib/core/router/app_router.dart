@@ -139,6 +139,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: AppRoutes.adminWardenForm, builder: (c, s) => WardenFormPage(warden: s.extra as Map<String, dynamic>?)),
       GoRoute(path: AppRoutes.adminHostelForm, builder: (c, s) => HostelFormPage(hostel: s.extra as Map<String, dynamic>?)),
       GoRoute(path: AppRoutes.adminComplaintDetail, builder: (c, s) => ComplaintDetailPage(complaintId: s.extra as String)),
+      GoRoute(path: AppRoutes.adminNotices, builder: (c, s) => const NoticesPage(role: 'admin')),
       GoRoute(path: AppRoutes.adminNoticeForm, builder: (c, s) => NoticeFormPage(notice: s.extra as Map<String, dynamic>?)),
       GoRoute(path: AppRoutes.adminAttendance, builder: (c, s) => const AttendanceAnalyticsPage()),
 
@@ -151,6 +152,7 @@ final routerProvider = Provider<GoRouter>((ref) {
 
       // ── Student ───────────────────────────────────────────
       GoRoute(path: AppRoutes.studentDashboard, builder: (c, s) => const StudentDashboardPage()),
+      GoRoute(path: AppRoutes.studentNotices, builder: (c, s) => const NoticesPage(role: 'student')),
       GoRoute(path: AppRoutes.studentComplaintForm, builder: (c, s) => const ComplaintFormPage()),
       GoRoute(path: AppRoutes.studentComplaintDetail, builder: (c, s) => ComplaintDetailPage(complaintId: s.extra as String)),
     ],

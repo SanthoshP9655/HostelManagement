@@ -23,7 +23,6 @@ class _OutpassWardenPageState extends ConsumerState<OutpassWardenPage> {
       backgroundColor: AppTheme.bgDark,
       appBar: AppBar(
         title: const Text('Outpass Requests'),
-        leading: const BackButton(),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),

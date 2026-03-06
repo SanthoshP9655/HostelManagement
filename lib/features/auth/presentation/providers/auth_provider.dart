@@ -31,6 +31,8 @@ class SessionNotifier extends AsyncNotifier<UserSession?> {
           role: session.role,
           collegeId: session.collegeId,
         );
+        // Show welcome notification
+        NotificationService.instance.showWelcomeNotification(session.role);
       } catch (e) {
         // Ignore token save errors on login (e.g. web notifications denied)
       }
@@ -56,6 +58,8 @@ class SessionNotifier extends AsyncNotifier<UserSession?> {
           role: session.role,
           collegeId: session.collegeId,
         );
+        // Show welcome notification
+        NotificationService.instance.showWelcomeNotification(session.role);
       } catch (e) {
         // Ignore token save errors on login (e.g. web notifications denied)
       }
@@ -81,6 +85,8 @@ class SessionNotifier extends AsyncNotifier<UserSession?> {
           role: session.role,
           collegeId: session.collegeId,
         );
+        // Show welcome notification
+        NotificationService.instance.showWelcomeNotification(session.role);
       } catch (e) {
         // Ignore token save errors on login (e.g. web notifications denied)
       }

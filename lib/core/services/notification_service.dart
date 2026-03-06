@@ -43,7 +43,7 @@ class NotificationService {
     // Local notifications setup (Android/iOS)
     if (!kIsWeb) {
       const androidSettings =
-          AndroidInitializationSettings('@mipmap/ic_launcher');
+          AndroidInitializationSettings('@mipmap/launcher_icon');
       const iosSettings = DarwinInitializationSettings(
         requestAlertPermission: true,
         requestBadgePermission: true,
@@ -135,7 +135,7 @@ class NotificationService {
           channelDescription: 'Notifications from SmartHostel',
           importance: Importance.max,
           priority: Priority.high,
-          icon: '@mipmap/ic_launcher',
+          icon: '@mipmap/launcher_icon',
         ),
         iOS: const DarwinNotificationDetails(),
       ),
@@ -154,6 +154,26 @@ class NotificationService {
     if (response.payload != null && _onNavigate != null) {
       _onNavigate!(response.payload!);
     }
+  }
+
+  void showWelcomeNotification(String role) {
+    if (kIsWeb) return; // Local notifications are tricky on Web. Let's skip them there so it doesn't crash.
+    _localNotifications.show(
+      999, // Static ID for welcome
+      'Login Successful 🎉',
+      'Welcome back! You are securely logged in as $role.',
+      const NotificationDetails(
+        android: AndroidNotificationDetails(
+          'hostel_high_importance',
+          'Hostel Notifications',
+          channelDescription: 'Notifications from SmartHostel',
+          importance: Importance.max,
+          priority: Priority.high,
+          icon: '@mipmap/launcher_icon',
+        ),
+        iOS: DarwinNotificationDetails(),
+      ),
+    );
   }
 
   // ── Send Notification via Supabase Edge Function ──────────

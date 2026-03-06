@@ -13,6 +13,7 @@ import '../../../hostel_management/presentation/pages/hostel_list_page.dart';
 import '../../../complaints/presentation/pages/complaints_page.dart';
 import '../../../warden_management/presentation/pages/warden_list_page.dart';
 import '../../../outpass/presentation/pages/outpass_admin_page.dart';
+import '../../../../features/admin/ai_rules_manager_tab.dart';
 
 class AdminDashboardPage extends ConsumerStatefulWidget {
   const AdminDashboardPage({super.key});
@@ -36,6 +37,7 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
         HostelListPage(),
         ComplaintsPage(role: 'admin'),
         OutpassAdminPage(),
+        AIRulesManagerTab(),
       ],
     );
 
@@ -53,6 +55,7 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
           NavigationDestination(icon: Icon(Icons.apartment_outlined), selectedIcon: Icon(Icons.apartment, color: AppTheme.adminPrimary), label: 'Hostels'),
           NavigationDestination(icon: Icon(Icons.report_outlined), selectedIcon: Icon(Icons.report, color: AppTheme.adminPrimary), label: 'Complaints'),
           NavigationDestination(icon: Icon(Icons.exit_to_app_outlined), selectedIcon: Icon(Icons.exit_to_app, color: AppTheme.adminPrimary), label: 'Outpass'),
+          NavigationDestination(icon: Icon(Icons.smart_toy_outlined), selectedIcon: Icon(Icons.smart_toy, color: AppTheme.adminPrimary), label: 'AI Rules'),
         ],
       ),
     );

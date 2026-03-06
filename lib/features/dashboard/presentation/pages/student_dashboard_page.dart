@@ -10,6 +10,7 @@ import '../../../complaints/presentation/pages/complaints_page.dart';
 import '../../../attendance/presentation/pages/my_attendance_page.dart';
 import '../../../outpass/presentation/pages/outpass_student_page.dart';
 import '../../../notices/presentation/pages/notices_page.dart';
+import '../../../../core/wrappers/student_portal_wrapper.dart';
 
 class StudentDashboardPage extends ConsumerStatefulWidget {
   const StudentDashboardPage({super.key});
@@ -34,20 +35,21 @@ class _StudentDashboardPageState extends ConsumerState<StudentDashboardPage> {
       ],
     );
 
-    return Scaffold(
-      backgroundColor: AppTheme.bgDark,
-      body: body,
-      bottomNavigationBar: NavigationBar(
-        backgroundColor: AppTheme.bgCard,
-        selectedIndex: _selectedIndex,
-        onDestinationSelected: (i) => setState(() => _selectedIndex = i),
-        destinations: const [
-          NavigationDestination(icon: Icon(Icons.dashboard_outlined), selectedIcon: Icon(Icons.dashboard, color: AppTheme.studentPrimary), label: 'Dashboard'),
-          NavigationDestination(icon: Icon(Icons.report_outlined), selectedIcon: Icon(Icons.report, color: AppTheme.studentPrimary), label: 'Complaints'),
-          NavigationDestination(icon: Icon(Icons.how_to_reg_outlined), selectedIcon: Icon(Icons.how_to_reg, color: AppTheme.studentPrimary), label: 'Attendance'),
-          NavigationDestination(icon: Icon(Icons.exit_to_app_outlined), selectedIcon: Icon(Icons.exit_to_app, color: AppTheme.studentPrimary), label: 'Outpass'),
-          NavigationDestination(icon: Icon(Icons.campaign_outlined), selectedIcon: Icon(Icons.campaign, color: AppTheme.studentPrimary), label: 'Notices'),
-        ],
+    return StudentPortalWrapper(
+      child: Scaffold(
+        backgroundColor: AppTheme.bgDark,
+        body: body,
+        bottomNavigationBar: NavigationBar(
+          backgroundColor: AppTheme.bgCard,
+          selectedIndex: _selectedIndex,
+          destinations: const [
+            NavigationDestination(icon: Icon(Icons.dashboard_outlined), selectedIcon: Icon(Icons.dashboard, color: AppTheme.studentPrimary), label: 'Dashboard'),
+            NavigationDestination(icon: Icon(Icons.report_outlined), selectedIcon: Icon(Icons.report, color: AppTheme.studentPrimary), label: 'Complaints'),
+            NavigationDestination(icon: Icon(Icons.how_to_reg_outlined), selectedIcon: Icon(Icons.how_to_reg, color: AppTheme.studentPrimary), label: 'Attendance'),
+            NavigationDestination(icon: Icon(Icons.exit_to_app_outlined), selectedIcon: Icon(Icons.exit_to_app, color: AppTheme.studentPrimary), label: 'Outpass'),
+            NavigationDestination(icon: Icon(Icons.campaign_outlined), selectedIcon: Icon(Icons.campaign, color: AppTheme.studentPrimary), label: 'Notices'),
+          ],
+        ),
       ),
     );
   }
